@@ -1,0 +1,40 @@
+# Ignore the main executable
+UFEMISM_program
+UFEMISM_program_dev
+UFEMISM_program_perf
+
+# Ignore build files
+build/*
+
+# Ignore scripts in main folder
+/*.sh
+/*.csh
+
+# Ignore the module and object files
+*.mod
+*.o
+
+# Ignore output files
+result*/
+
+# Ignore MacOS files
+.DS_Store
+
+# Ignore SLURM output on Snellius
+slurm-*.out
+
+# Ignore depend file
+.depend
+
+# Ignore Matlab autosave files
+*.asv
+
+# ignore data directory
+data
+
+# Ignore any figure
+*.png
+*.png
+
+# ignore possible netCDF files
+*.nc
