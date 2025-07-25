@@ -1,5 +1,16 @@
 % code to load and read variables from UFEMISM simulations
 clear all
+
+%========= PATH TO OUTPUT UFEMISM DIRECTORY
+output_folder = 'results_ant_PD_inversion_dHdt';
+ufe_folder_path=['/Users/frre9931/Desktop/UFEMISM2.0_main/UFEMISM2.0/', output_folder];
+allow_mesh_update = false; % if remeshing is allowed in simulation
+allow_plot_mesh = true; % if we want to plot the mesh
+allow_save_plots = false;
+path_save = '/Users/frre9931/Documents/PhD/ANT_UFEMISM/plots_ant/';
+% number pointing the file with updated mesh
+number_mesh ='2'; % i.e. 2 for main_output_ANT_00002.nc
+
 % add functions from UFEMISM library
 path(path,genpath('/Users/frre9931/Desktop/UFEMISM2.0_main/UFEMISM2.0/tools/matlab'));
 path(path,genpath('/Users/frre9931/Documents/PhD/m_map'));
@@ -23,13 +34,8 @@ for i=1:length(uabs_MEaSUREs(:,1))
     end
 end
 
-% UFEMISM output file to read
-% ==========================
-
-% path to the folder that has the outputs from UFEMISM simulation 
-ufe_folder_path='/Users/frre9931/Desktop/UFEMISM2.0_main/UFEMISM2.0/results_ant_PD_inversion_dHdt/';
 % filename to load the main output in grid format
-filename= [ufe_folder_path, 'main_output_ANT_grid.nc'];
+filename= [ufe_folder_path, '/main_output_ANT_grid.nc'];
 
 Hi=ncread(filename,'Hi');
 u_surf=ncread(filename,'u_surf');
@@ -44,7 +50,138 @@ x=ncread(filename,'x');
 y=ncread(filename,'y');
 Hb_diff_first5kyr=Hb(:,:,end)-Hb(:,:,1);
 Hi_diff_first5kyr=Hi(:,:,end)-Hi(:,:,1);
-%% figure of Hb difference
+
+%% load the mesh
+
+mesh_path_first= [ufe_folder_path, '/main_output_ANT_00001.nc']; %initial state
+time_slice=1 ; % what time is going to be loaded, if load all of them is just NaNs idk why
+
+% read_mesh_from_file + CL, GL and CF
+mesh_first=read_mesh_from_file(mesh_path_first);
+CL=ncread(mesh_path_first,'coastline',[1,1,1], [11788,2,time_slice]);
+GL=ncread(mesh_path_first,'grounding_line',[1,1,1], [11788,2,time_slice]);
+CF=ncread(mesh_path_first,'calving_front',[1,1,1], [11788,2,time_slice]);
+
+if allow_mesh_update
+    % path to the new mesh, for now just changing the number here
+    mesh_path_update = [ufe_folder_path, '/main_output_ANT_0000',number_mesh,'.nc']; 
+    mesh_updated=read_mesh_from_file(mesh_path_update);
+    CL_mesh2=ncread(mesh_path_update,'coastline',[1,1,1], [11788,2,time_slice]);
+    GL_mesh2=ncread(mesh_path_update,'grounding_line',[1,1,1], [11788,2,time_slice]);
+    CF_mesh2=ncread(mesh_path_update,'calving_front',[1,1,1], [11788,2,time_slice]);
+end
+if allow_plot_mesh
+    plot_mesh(mesh_first);
+    hold on
+    plot(CF(:,1),CF(:,2),'LineWidth',2,'Color','red');
+    plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
+    plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','green');
+    hold off
+    if allow_save_plots
+        print([path_save,output_folder,'_mesh_1'],'-dpng','-r300')
+    end
+elseif allow_plot_mesh & allow_mesh_update
+    plot_mesh(mesh)
+    hold on
+    plot(CF_mesh2(:,1),CF_mesh2(:,2),'LineWidth',2,'Color','red');
+    plot(CL_mesh2(:,1),CL_mesh2(:,2),'LineWidth',2,'Color','blue');
+    plot(GL_mesh2(:,1),GL_mesh2(:,2),'LineWidth',2,'Color','green');
+    hold off
+    if allow_save_plots
+        print([path_save,output_folder,'_mesh_',number_mesh],'-dpng','-r300')
+    end
+end
+%% add contour lines from the mesh to my plots
+
+[Hi_fix, maskHi0]= Hi0_to_NaN(Hi);
+
+figure('position',[100 100 500 500])
+hold on
+contourf(x,y,Hi_fix(:,:,1)',20,'LineColor','none');
+cbar2=colorbar;
+set(gca, 'Position', [0.035, 0.03, 0.83, 0.90]); 
+cbar2.Position(1) = cbar2.Position(1) + 0.03;  % Shift it 0.06 units to the right
+t=title('Ice thickness initial state (m)');
+t.Units='normalized';
+t.Position(2)=1.05;
+clim([0 4000]);
+%colormap('jet');
+
+plot(CF(:,1),CF(:,2),'LineWidth',2,'Color','red');
+plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
+plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','green');
+if allow_save_plots
+    print([path_save,output_folder,'_Hi_t0'],'-dpng','-r300')
+end
+
+% now final state
+figure('position',[100 100 500 500])
+hold on
+contourf(x,y,Hi_fix(:,:,end)',20,'LineColor','none');
+cbar2=colorbar;
+set(gca, 'Position', [0.035, 0.03, 0.83, 0.90]); 
+cbar2.Position(1) = cbar2.Position(1) + 0.03;  % Shift it 0.06 units to the right
+t=title('Ice thickness final state (m)');
+t.Units='normalized';
+t.Position(2)=1.05;
+%colormap('jet');
+if allow_mesh_update
+    plot(CF_mesh2(:,1),CF_mesh2(:,2),'LineWidth',2,'Color','red');
+    plot(CL_mesh2(:,1),CL_mesh2(:,2),'LineWidth',2,'Color','blue');
+    plot(GL_mesh2(:,1),GL_mesh2(:,2),'LineWidth',2,'Color','green');
+else
+    plot(CF(:,1),CF(:,2),'LineWidth',2,'Color','red');
+    plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
+    plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','green');
+end
+if allow_save_plots
+    print([path_save,output_folder,'_Hi_tf'],'-dpng','-r300')
+end
+%% now do same plot with velocities adding the maskHi0
+figure('position',[100 100 500 500])
+hold on
+contourf(x,y,(uabs_surf(:,:,1).*maskHi0(:,:,1))',20,'LineColor','none');
+cbar2=colorbar;
+set(gca, 'Position', [0.035, 0.03, 0.83, 0.90]); 
+cbar2.Position(1) = cbar2.Position(1) + 0.03;  % Shift it 0.06 units to the right
+t=title('Initial surface ice velocity (m/yr)');
+t.Units='normalized';
+t.Position(2)=1.05;
+clim([0 1500]);
+
+plot(CF(:,1),CF(:,2),'LineWidth',2,'Color','red');
+plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
+plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','green');
+if allow_save_plots
+    print([path_save,output_folder,'_uabs_t0'],'-dpng','-r300')
+end
+
+figure('position',[100 100 500 500])
+hold on
+contourf(x,y,(uabs_surf(:,:,end).*maskHi0(:,:,end))',20,'LineColor','none');
+cbar2=colorbar;
+set(gca, 'Position', [0.035, 0.03, 0.83, 0.90]); 
+cbar2.Position(1) = cbar2.Position(1) + 0.03;  % Shift it 0.06 units to the right
+t=title('Final surface ice velocity (m/yr)');
+t.Units='normalized';
+t.Position(2)=1.05;
+clim([0 1500]);
+if allow_mesh_update
+    plot(CF_mesh2(:,1),CF_mesh2(:,2),'LineWidth',2,'Color','red');
+    plot(CL_mesh2(:,1),CL_mesh2(:,2),'LineWidth',2,'Color','blue');
+    plot(GL_mesh2(:,1),GL_mesh2(:,2),'LineWidth',2,'Color','green');
+else
+    plot(CF(:,1),CF(:,2),'LineWidth',2,'Color','red');
+    plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
+    plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','green');
+end
+if allow_save_plots
+    print([path_save,output_folder,'_uabs_tf'],'-dpng','-r300')
+end
+
+%% MOVED A LOT OF THINGS TO HERE FOR NOW, CHECK WHAT IS USEFUL
+
+% figure of Hb difference
 figure('position',[100 100 500 500])
 m_proj('stereographic','lat',-90,'long',0,'radius',37,'rectbox','on');
 hold on
@@ -156,80 +293,6 @@ t.Units='normalized';
 t.Position(2)=1.05;
 clim([0 1500]);
 %print('uabs_MEaSUREs','-dpng','-r300')
-%% load the mesh
-
-mesh_path_first= [ufe_folder_path, 'main_output_ANT_00001.nc']; %initial state
-allow_mesh_update = false; % if remeshing is allowed in simulation
-time_slice=1 ; % what time is going to be loaded, if load all of them is just NaNs idk why
-allow_plot_mesh = true; % if we want to plot the mesh
-
-% read_mesh_from_file + CL, GL and CF
-mesh_first=read_mesh_from_file(mesh_path_first);
-CL=ncread(mesh_path_first,'coastline',[1,1,1], [11788,2,time_slice]);
-GL=ncread(mesh_path_first,'grounding_line',[1,1,1], [11788,2,time_slice]);
-CF=ncread(mesh_path_first,'calving_front',[1,1,1], [11788,2,time_slice]);
-
-if allow_mesh_update
-    % path to the new mesh, for now just changing the number here
-    mesh_path_update = [ufe_folder_path, 'main_output_ANT_00002.nc']; 
-    mesh_updated=read_mesh_from_file(mesh_path_update);
-    CL_mesh2=ncread(mesh_path_update,'coastline',[1,1,1], [11788,2,time_slice]);
-    GL_mesh2=ncread(mesh_path_update,'grounding_line',[1,1,1], [11788,2,time_slice]);
-    CF_mesh2=ncread(mesh_path_update,'calving_front',[1,1,1], [11788,2,time_slice]);
-end
-if allow_plot_mesh
-    plot_mesh(mesh_first);
-    hold on
-    plot(CF(:,1),CF(:,2),'LineWidth',2,'Color','red');
-    plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
-    plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','green');
-    hold off
-elseif allow_plot_mesh & allow_mesh_update
-    plot_mesh(mesh)
-    hold on
-    plot(CF_mesh2(:,1),CF_mesh2(:,2),'LineWidth',2,'Color','red');
-    plot(CL_mesh2(:,1),CL_mesh2(:,2),'LineWidth',2,'Color','blue');
-    plot(GL_mesh2(:,1),GL_mesh2(:,2),'LineWidth',2,'Color','green');
-    hold off
-end
-%% try to add contour lines from the mesh to my plots
-
-[Hi_fix, maskHi0]= Hi0_to_NaN(Hi);
-
-figure('position',[100 100 500 500])
-hold on
-contourf(x,y,Hi_fix(:,:,end)',20,'LineColor','none');
-
-cbar2=colorbar;
-set(gca, 'Position', [0.035, 0.03, 0.83, 0.90]); 
-cbar2.Position(1) = cbar2.Position(1) + 0.03;  % Shift it 0.06 units to the right
-t=title('Ice thickness (m)');
-t.Units='normalized';
-t.Position(2)=1.05;
-%clim([0.001 1500]);
-%colormap('jet');
-
-plot(CF(:,1),CF(:,2),'LineWidth',2,'Color','red');
-plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
-plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','green');
-
-%% now do same plot with velocities adding the maskHi0
-figure('position',[100 100 500 500])
-hold on
-contourf(x,y,(uabs_surf(:,:,end).*maskHi0(:,:,end))',20,'LineColor','none');
-cbar2=colorbar;
-set(gca, 'Position', [0.035, 0.03, 0.83, 0.90]); 
-cbar2.Position(1) = cbar2.Position(1) + 0.03;  % Shift it 0.06 units to the right
-t=title('Final surface ice velocity (m/yr)');
-t.Units='normalized';
-t.Position(2)=1.05;
-clim([0 1500]);
-%print('uabs_tf','-dpng','-r300')
-
-plot(CF(:,1),CF(:,2),'LineWidth',2,'Color','red');
-plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
-plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','green');
-
 %% plot for Antarctic Peninsula - Weddell Sea
 
 figure()
