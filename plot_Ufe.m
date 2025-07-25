@@ -1,15 +1,19 @@
 % code to load and read variables from UFEMISM simulations
 clear all
 
-%========= PATH TO OUTPUT UFEMISM DIRECTORY
-output_folder = 'results_ant_PD_inversion_dHdt';
-ufe_folder_path=['/Users/frre9931/Desktop/UFEMISM2.0_main/UFEMISM2.0/', output_folder];
-allow_mesh_update = false; % if remeshing is allowed in simulation
+%========= PATH TO OUTPUT UFEMISM DIRECTORY ==========
+output_folder = 'results_ant_climate_matrix';
+ufe_folder_path=['/Users/frre9931/Desktop/UFEMISM2.0_porting/', output_folder];
 allow_plot_mesh = true; % if we want to plot the mesh
 allow_save_plots = false;
 path_save = '/Users/frre9931/Documents/PhD/ANT_UFEMISM/plots_ant/';
+allow_mesh_update = true; % if remeshing is allowed in simulation
 % number pointing the file with updated mesh
-number_mesh ='2'; % i.e. 2 for main_output_ANT_00002.nc
+number_mesh ='3'; % i.e. 2 for main_output_ANT_00002.nc
+% in one simulation more than one ROI can be set, think about it
+ROI_set = true; % if exist at least one ROI
+ROI='LarsenC'; 
+%========= END OF CONFIGURATION ======================
 
 % add functions from UFEMISM library
 path(path,genpath('/Users/frre9931/Desktop/UFEMISM2.0_main/UFEMISM2.0/tools/matlab'));
@@ -51,6 +55,18 @@ y=ncread(filename,'y');
 Hb_diff_first5kyr=Hb(:,:,end)-Hb(:,:,1);
 Hi_diff_first5kyr=Hi(:,:,end)-Hi(:,:,1);
 
+% calculate mask where Hi>0, outside is NaN
+[Hi_fix, maskHi0]= Hi0_to_NaN(Hi);
+
+% do the same for ROI
+if ROI_set
+filename_ROI= [ufe_folder_path, '/main_output_ANT_grid_ROI_',ROI,'.nc'];
+Hi_ROI=ncread(filename_ROI,'Hi');
+uabs_surf_ROI=ncread(filename_ROI,'uabs_surf');
+x_ROI=ncread(filename_ROI,'x');
+y_ROI=ncread(filename_ROI,'y');
+[~, maskHi0_ROI]= Hi0_to_NaN(Hi_ROI);
+end
 %% load the mesh
 
 mesh_path_first= [ufe_folder_path, '/main_output_ANT_00001.nc']; %initial state
@@ -80,22 +96,21 @@ if allow_plot_mesh
     if allow_save_plots
         print([path_save,output_folder,'_mesh_1'],'-dpng','-r300')
     end
-elseif allow_plot_mesh & allow_mesh_update
-    plot_mesh(mesh)
-    hold on
-    plot(CF_mesh2(:,1),CF_mesh2(:,2),'LineWidth',2,'Color','red');
-    plot(CL_mesh2(:,1),CL_mesh2(:,2),'LineWidth',2,'Color','blue');
-    plot(GL_mesh2(:,1),GL_mesh2(:,2),'LineWidth',2,'Color','green');
-    hold off
-    if allow_save_plots
-        print([path_save,output_folder,'_mesh_',number_mesh],'-dpng','-r300')
-    end
+    if allow_mesh_update
+        plot_mesh(mesh_updated);
+        hold on
+        plot(CF_mesh2(:,1),CF_mesh2(:,2),'LineWidth',2,'Color','red');
+        plot(CL_mesh2(:,1),CL_mesh2(:,2),'LineWidth',2,'Color','blue');
+        plot(GL_mesh2(:,1),GL_mesh2(:,2),'LineWidth',2,'Color','green');
+        hold off
+        if allow_save_plots
+            print([path_save,output_folder,'_mesh_',number_mesh],'-dpng','-r300')
+        end
+    end    
 end
 %% add contour lines from the mesh to my plots
 
-[Hi_fix, maskHi0]= Hi0_to_NaN(Hi);
-
-figure('position',[100 100 500 500])
+figure('position',[100 100 750 750])
 hold on
 contourf(x,y,Hi_fix(:,:,1)',20,'LineColor','none');
 cbar2=colorbar;
@@ -106,7 +121,6 @@ t.Units='normalized';
 t.Position(2)=1.05;
 clim([0 4000]);
 %colormap('jet');
-
 plot(CF(:,1),CF(:,2),'LineWidth',2,'Color','red');
 plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
 plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','green');
@@ -125,6 +139,7 @@ t=title('Ice thickness final state (m)');
 t.Units='normalized';
 t.Position(2)=1.05;
 %colormap('jet');
+clim([0 4000]);
 if allow_mesh_update
     plot(CF_mesh2(:,1),CF_mesh2(:,2),'LineWidth',2,'Color','red');
     plot(CL_mesh2(:,1),CL_mesh2(:,2),'LineWidth',2,'Color','blue');
@@ -178,7 +193,57 @@ end
 if allow_save_plots
     print([path_save,output_folder,'_uabs_tf'],'-dpng','-r300')
 end
+%% NEXT TASK IS TO WORK ON THE SPECIFIC REGIONS, FOR EXAMPLE A PLOT FOR AP
+if ROI_set
 
+figure('position',[100 100 750 750])
+hold on
+contourf(x_ROI,y_ROI,(Hi_ROI(:,:,1).*maskHi0_ROI(:,:,1))',20,'LineColor','none');
+cbar2=colorbar;
+set(gca, 'Position', [0.035, 0.03, 0.83, 0.90]); 
+cbar2.Position(1) = cbar2.Position(1) + 0.03;  % Shift it 0.06 units to the right
+t=title('Ice thickness initial state (m)');
+t.Units='normalized';
+t.Position(2)=1.05;
+xlim([min(x_ROI) max(x_ROI)]);
+ylim([min(y_ROI) max(y_ROI)]);
+clim([0 4000]);
+%colormap('jet');
+plot(CF(:,1),CF(:,2),'LineWidth',2,'Color','red');
+plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
+plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','green');
+if allow_save_plots
+    print([path_save,output_folder,'_Hi_t0_',ROI],'-dpng','-r300')
+end
+
+% now final state
+figure('position',[100 100 500 500])
+hold on
+contourf(x_ROI,y_ROI,(Hi_ROI(:,:,end).*maskHi0_ROI(:,:,end))',20,'LineColor','none');
+cbar2=colorbar;
+set(gca, 'Position', [0.035, 0.03, 0.83, 0.90]); 
+cbar2.Position(1) = cbar2.Position(1) + 0.03;  % Shift it 0.06 units to the right
+t=title('Ice thickness final state (m)');
+t.Units='normalized';
+t.Position(2)=1.05;
+%colormap('jet');
+clim([0 4000]);
+xlim([min(x_ROI) max(x_ROI)]);
+ylim([min(y_ROI) max(y_ROI)]);
+if allow_mesh_update
+    plot(CF_mesh2(:,1),CF_mesh2(:,2),'LineWidth',2,'Color','red');
+    plot(CL_mesh2(:,1),CL_mesh2(:,2),'LineWidth',2,'Color','blue');
+    plot(GL_mesh2(:,1),GL_mesh2(:,2),'LineWidth',2,'Color','green');
+else
+    plot(CF(:,1),CF(:,2),'LineWidth',2,'Color','red');
+    plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
+    plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','green');
+end
+if allow_save_plots
+    print([path_save,output_folder,'_Hi_tf_',ROI],'-dpng','-r300')
+end
+
+end % if ROI_set
 %% MOVED A LOT OF THINGS TO HERE FOR NOW, CHECK WHAT IS USEFUL
 
 % figure of Hb difference
