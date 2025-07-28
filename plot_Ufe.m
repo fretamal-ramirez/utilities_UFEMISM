@@ -2,14 +2,14 @@
 clear all
 
 %========= PATH TO OUTPUT UFEMISM DIRECTORY ==========
-output_folder = 'results_ant_climate_matrix';
+output_folder = 'results_ant_climate_matrix_Larsen_high_CF50m';
 ufe_folder_path=['/Users/frre9931/Desktop/UFEMISM2.0_porting/', output_folder];
 allow_plot_mesh = true; % if we want to plot the mesh
 allow_save_plots = false;
 path_save = '/Users/frre9931/Documents/PhD/ANT_UFEMISM/plots_ant/';
 allow_mesh_update = true; % if remeshing is allowed in simulation
 % number pointing the file with updated mesh
-number_mesh ='3'; % i.e. 2 for main_output_ANT_00002.nc
+number_mesh ='2'; % i.e. 2 for main_output_ANT_00002.nc
 % in one simulation more than one ROI can be set, think about it
 ROI_set = true; % if exist at least one ROI
 ROI='LarsenC'; 
@@ -37,6 +37,11 @@ for i=1:length(uabs_MEaSUREs(:,1))
         end
     end
 end
+
+% load the ice sheet reconstruction from RAISED
+RAISED_20ka_small=shaperead('/Users/frre9931/Documents/PhD/RAISED_Shapefiles/RAISED_20ka_AntarcticPeninsula_small.shp');
+RAISED_20ka_medium=shaperead('/Users/frre9931/Documents/PhD/RAISED_Shapefiles/RAISED_20ka_AntarcticPeninsula_medium.shp');
+RAISED_20ka_big=shaperead('/Users/frre9931/Documents/PhD/RAISED_Shapefiles/RAISED_20ka_AntarcticPeninsula_big.shp');
 
 % filename to load the main output in grid format
 filename= [ufe_folder_path, '/main_output_ANT_grid.nc'];
@@ -77,6 +82,7 @@ mesh_first=read_mesh_from_file(mesh_path_first);
 CL=ncread(mesh_path_first,'coastline',[1,1,1], [11788,2,time_slice]);
 GL=ncread(mesh_path_first,'grounding_line',[1,1,1], [11788,2,time_slice]);
 CF=ncread(mesh_path_first,'calving_front',[1,1,1], [11788,2,time_slice]);
+IM=ncread(mesh_path_first,'ice_margin',[1,1,1], [11788,2,time_slice]);
 
 if allow_mesh_update
     % path to the new mesh, for now just changing the number here
@@ -129,7 +135,7 @@ if allow_save_plots
 end
 
 % now final state
-figure('position',[100 100 500 500])
+figure('position',[100 100 750 750])
 hold on
 contourf(x,y,Hi_fix(:,:,end)',20,'LineColor','none');
 cbar2=colorbar;
@@ -144,10 +150,12 @@ if allow_mesh_update
     plot(CF_mesh2(:,1),CF_mesh2(:,2),'LineWidth',2,'Color','red');
     plot(CL_mesh2(:,1),CL_mesh2(:,2),'LineWidth',2,'Color','blue');
     plot(GL_mesh2(:,1),GL_mesh2(:,2),'LineWidth',2,'Color','green');
+    plot(IM(:,1),IM(:,2),'LineWidth',2,'Color','black','LineStyle','-.');
 else
     plot(CF(:,1),CF(:,2),'LineWidth',2,'Color','red');
     plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
     plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','green');
+    plot(IM(:,1),IM(:,2),'LineWidth',2,'Color','black','LineStyle','-.');
 end
 if allow_save_plots
     print([path_save,output_folder,'_Hi_tf'],'-dpng','-r300')
@@ -196,48 +204,61 @@ end
 %% NEXT TASK IS TO WORK ON THE SPECIFIC REGIONS, FOR EXAMPLE A PLOT FOR AP
 if ROI_set
 
-figure('position',[100 100 750 750])
+% Set up GUI
+wa = 750;
+ha = 750;
+
+margins_hor = [125,125];
+margins_ver = [125,50];
+
+wf = margins_hor( 1) + wa + margins_hor( 2);
+hf = margins_ver( 1) + ha + margins_ver( 2);
+
+H.Fig = figure( 'position',[100,100,wf,hf],'color','w');
+H.Ax  = axes('parent',H.Fig,'units','pixels','position',[margins_hor(1),margins_ver(1),wa,ha],...
+  'xlim',[min(x_ROI) max(x_ROI)],'ylim',[min(y_ROI) max(y_ROI)],'fontsize',24,'xgrid','on','ygrid','on');
 hold on
 contourf(x_ROI,y_ROI,(Hi_ROI(:,:,1).*maskHi0_ROI(:,:,1))',20,'LineColor','none');
 cbar2=colorbar;
-set(gca, 'Position', [0.035, 0.03, 0.83, 0.90]); 
-cbar2.Position(1) = cbar2.Position(1) + 0.03;  % Shift it 0.06 units to the right
 t=title('Ice thickness initial state (m)');
 t.Units='normalized';
-t.Position(2)=1.05;
-xlim([min(x_ROI) max(x_ROI)]);
-ylim([min(y_ROI) max(y_ROI)]);
-clim([0 4000]);
-%colormap('jet');
+clim([0 (max(max(Hi_ROI(:,:,1)))+max(max(Hi_ROI(:,:,end))))/2]);
+
 plot(CF(:,1),CF(:,2),'LineWidth',2,'Color','red');
 plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
 plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','green');
+
 if allow_save_plots
     print([path_save,output_folder,'_Hi_t0_',ROI],'-dpng','-r300')
 end
 
 % now final state
-figure('position',[100 100 500 500])
+H.Fig = figure( 'position',[100,100,wf,hf],'color','w');
+H.Ax  = axes('parent',H.Fig,'units','pixels','position',[margins_hor(1),margins_ver(1),wa,ha],...
+  'xlim',[min(x_ROI) max(x_ROI)],'ylim',[min(y_ROI) max(y_ROI)],'fontsize',24,'xgrid','on','ygrid','on');
 hold on
 contourf(x_ROI,y_ROI,(Hi_ROI(:,:,end).*maskHi0_ROI(:,:,end))',20,'LineColor','none');
 cbar2=colorbar;
-set(gca, 'Position', [0.035, 0.03, 0.83, 0.90]); 
-cbar2.Position(1) = cbar2.Position(1) + 0.03;  % Shift it 0.06 units to the right
 t=title('Ice thickness final state (m)');
 t.Units='normalized';
-t.Position(2)=1.05;
-%colormap('jet');
-clim([0 4000]);
-xlim([min(x_ROI) max(x_ROI)]);
-ylim([min(y_ROI) max(y_ROI)]);
+clim([0 (max(max(Hi_ROI(:,:,1)))+max(max(Hi_ROI(:,:,end))))/2]);
+
 if allow_mesh_update
     plot(CF_mesh2(:,1),CF_mesh2(:,2),'LineWidth',2,'Color','red');
     plot(CL_mesh2(:,1),CL_mesh2(:,2),'LineWidth',2,'Color','blue');
     plot(GL_mesh2(:,1),GL_mesh2(:,2),'LineWidth',2,'Color','green');
+    plot(IM(:,1),IM(:,2),'LineWidth',2,'Color','black','LineStyle','-.');
+    plot(RAISED_20ka_small.X,RAISED_20ka_small.Y,'LineWidth',2,'Color','magenta','LineStyle','-.');
+    plot(RAISED_20ka_medium.X,RAISED_20ka_medium.Y,'LineWidth',2,'Color','magenta','LineStyle','-.');
+    plot(RAISED_20ka_big.X,RAISED_20ka_big.Y,'LineWidth',2,'Color','magenta','LineStyle','-.');
 else
     plot(CF(:,1),CF(:,2),'LineWidth',2,'Color','red');
     plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
     plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','green');
+    plot(IM(:,1),IM(:,2),'LineWidth',2,'Color','black','LineStyle','-.');
+    plot(RAISED_20ka_small.X,RAISED_20ka_small.Y,'LineWidth',2,'Color','magenta','LineStyle','-.');
+    plot(RAISED_20ka_medium.X,RAISED_20ka_medium.Y,'LineWidth',2,'Color','magenta','LineStyle','-.');
+    plot(RAISED_20ka_big.X,RAISED_20ka_big.Y,'LineWidth',2,'Color','magenta','LineStyle','-.');
 end
 if allow_save_plots
     print([path_save,output_folder,'_Hi_tf_',ROI],'-dpng','-r300')
@@ -245,6 +266,23 @@ end
 
 end % if ROI_set
 %% MOVED A LOT OF THINGS TO HERE FOR NOW, CHECK WHAT IS USEFUL
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 % figure of Hb difference
 figure('position',[100 100 500 500])
