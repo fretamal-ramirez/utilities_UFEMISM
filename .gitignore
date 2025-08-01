@@ -7,7 +7,6 @@ UFEMISM_program_perf
 build/*
 
 # Ignore scripts in main folder
-/*.sh
 /*.csh
 
 # Ignore the module and object files
