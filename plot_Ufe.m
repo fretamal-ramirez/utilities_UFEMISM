@@ -2,17 +2,17 @@
 clear all
 
 %========= PATH TO OUTPUT UFEMISM DIRECTORY ==========
-output_folder = 'results_ant_climate_matrix_Larsen_high_CF50m';
-ufe_folder_path=['/Users/frre9931/Desktop/UFEMISM2.0_porting/', output_folder];
+output_folder = 'results_ant_PMIP_INM-CM4-8';
+ufe_folder_path=['/Users/frre9931/Desktop/UFEMISM2.0_main/UFEMISM2.0/', output_folder];
 allow_plot_mesh = true; % if we want to plot the mesh
 allow_save_plots = false;
 path_save = '/Users/frre9931/Documents/PhD/ANT_UFEMISM/plots_ant/';
-allow_mesh_update = true; % if remeshing is allowed in simulation
+allow_mesh_update = false; % if remeshing is allowed in simulation
 % number pointing the file with updated mesh
 number_mesh ='2'; % i.e. 2 for main_output_ANT_00002.nc
 % in one simulation more than one ROI can be set, think about it
-ROI_set = true; % if exist at least one ROI
-ROI='LarsenC'; 
+ROI_set = false; % if exist at least one ROI
+ROI='Antarctic_Peninsula'; 
 %========= END OF CONFIGURATION ======================
 
 % add functions from UFEMISM library
@@ -83,6 +83,7 @@ CL=ncread(mesh_path_first,'coastline',[1,1,1], [11788,2,time_slice]);
 GL=ncread(mesh_path_first,'grounding_line',[1,1,1], [11788,2,time_slice]);
 CF=ncread(mesh_path_first,'calving_front',[1,1,1], [11788,2,time_slice]);
 IM=ncread(mesh_path_first,'ice_margin',[1,1,1], [11788,2,time_slice]);
+%GIC=ncread(mesh_path_first,'grounded_ice_contour',[1,1,1],[11788,2,time_slice]); % not really useful
 
 if allow_mesh_update
     % path to the new mesh, for now just changing the number here
@@ -151,11 +152,12 @@ if allow_mesh_update
     plot(CL_mesh2(:,1),CL_mesh2(:,2),'LineWidth',2,'Color','blue');
     plot(GL_mesh2(:,1),GL_mesh2(:,2),'LineWidth',2,'Color','green');
     plot(IM(:,1),IM(:,2),'LineWidth',2,'Color','black','LineStyle','-.');
+    plot(GIC(:,1),GIC(:,2),'LineWidth',2,'Color','yellow','LineStyle','-.');
 else
     plot(CF(:,1),CF(:,2),'LineWidth',2,'Color','red');
     plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
     plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','green');
-    plot(IM(:,1),IM(:,2),'LineWidth',2,'Color','black','LineStyle','-.');
+    plot(IM(:,1),IM(:,2),'LineWidth',2,'Color','yellow','LineStyle','-.');
 end
 if allow_save_plots
     print([path_save,output_folder,'_Hi_tf'],'-dpng','-r300')
@@ -216,7 +218,7 @@ hf = margins_ver( 1) + ha + margins_ver( 2);
 
 H.Fig = figure( 'position',[100,100,wf,hf],'color','w');
 H.Ax  = axes('parent',H.Fig,'units','pixels','position',[margins_hor(1),margins_ver(1),wa,ha],...
-  'xlim',[min(x_ROI) max(x_ROI)],'ylim',[min(y_ROI) max(y_ROI)],'fontsize',24,'xgrid','on','ygrid','on');
+  'xlim',[min(x_ROI)+5e4 max(x_ROI)-5e4],'ylim',[min(y_ROI)+5e4 max(y_ROI)-5e4],'fontsize',24,'xgrid','on','ygrid','on');
 hold on
 contourf(x_ROI,y_ROI,(Hi_ROI(:,:,1).*maskHi0_ROI(:,:,1))',20,'LineColor','none');
 cbar2=colorbar;
@@ -235,7 +237,7 @@ end
 % now final state
 H.Fig = figure( 'position',[100,100,wf,hf],'color','w');
 H.Ax  = axes('parent',H.Fig,'units','pixels','position',[margins_hor(1),margins_ver(1),wa,ha],...
-  'xlim',[min(x_ROI) max(x_ROI)],'ylim',[min(y_ROI) max(y_ROI)],'fontsize',24,'xgrid','on','ygrid','on');
+  'xlim',[min(x_ROI)+5e4 max(x_ROI)-5e4],'ylim',[min(y_ROI)+5e4 max(y_ROI)-5e4],'fontsize',24,'xgrid','on','ygrid','on');
 hold on
 contourf(x_ROI,y_ROI,(Hi_ROI(:,:,end).*maskHi0_ROI(:,:,end))',20,'LineColor','none');
 cbar2=colorbar;
