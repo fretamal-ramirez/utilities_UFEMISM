@@ -26,7 +26,7 @@ echo ""
 echo ">>> Compiling UFEMISM ($BUILD_TYPE, $BUILD_MODE)"
 echo ""
 
-cd UFEMISM2.0/
+cd UFEMISM2.0_porting/
 
 # Clean or incremental build handling
 if [ "$BUILD_MODE" == "clean" ]; then
