@@ -1,9 +1,11 @@
 % code to load and read variables from UFEMISM simulations
-clear all
+clear all; clc;
 
 %========= PATH TO OUTPUT UFEMISM DIRECTORY ==========
-output_folder = 'results_ant_PMIP_INM-CM4-8';
+output_folder = 'results_ant_PD_inversion_dHdt';
 ufe_folder_path=['/Users/frre9931/Desktop/UFEMISM2.0_main/UFEMISM2.0/', output_folder];
+%ufe_folder_path=['/Users/frre9931/Desktop/UFEMISM2.0_porting/', output_folder];
+%ufe_folder_path=['/Users/frre9931/Desktop/tetralith_results/', output_folder];
 allow_plot_mesh = true; % if we want to plot the mesh
 allow_save_plots = false;
 path_save = '/Users/frre9931/Documents/PhD/ANT_UFEMISM/plots_ant/';
@@ -12,6 +14,7 @@ allow_mesh_update = false; % if remeshing is allowed in simulation
 number_mesh ='2'; % i.e. 2 for main_output_ANT_00002.nc
 % in one simulation more than one ROI can be set, think about it
 ROI_set = false; % if exist at least one ROI
+%ROI='LarsenC';
 ROI='Antarctic_Peninsula'; 
 %========= END OF CONFIGURATION ======================
 
@@ -58,7 +61,7 @@ lat=ncread(filename,'lat');
 x=ncread(filename,'x');
 y=ncread(filename,'y');
 Hb_diff_first5kyr=Hb(:,:,end)-Hb(:,:,1);
-Hi_diff_first5kyr=Hi(:,:,end)-Hi(:,:,1);
+Hi_diff=Hi(:,:,end)-Hi(:,:,1);
 
 % calculate mask where Hi>0, outside is NaN
 [Hi_fix, maskHi0]= Hi0_to_NaN(Hi);
@@ -75,23 +78,34 @@ end
 %% load the mesh
 
 mesh_path_first= [ufe_folder_path, '/main_output_ANT_00001.nc']; %initial state
-time_slice=1 ; % what time is going to be loaded, if load all of them is just NaNs idk why
 
 % read_mesh_from_file + CL, GL and CF
 mesh_first=read_mesh_from_file(mesh_path_first);
-CL=ncread(mesh_path_first,'coastline',[1,1,1], [11788,2,time_slice]);
-GL=ncread(mesh_path_first,'grounding_line',[1,1,1], [11788,2,time_slice]);
-CF=ncread(mesh_path_first,'calving_front',[1,1,1], [11788,2,time_slice]);
-IM=ncread(mesh_path_first,'ice_margin',[1,1,1], [11788,2,time_slice]);
-%GIC=ncread(mesh_path_first,'grounded_ice_contour',[1,1,1],[11788,2,time_slice]); % not really useful
+
+time_slice_init=1 ; % first time
+time_slice1=ncread(mesh_path_first,'time'); % load the time of the mesh
+
+CL=ncread(mesh_path_first,'coastline',[1,1,1], [size(mesh_first.E,1),2,time_slice_init]);
+GL=ncread(mesh_path_first,'grounding_line',[1,1,1], [size(mesh_first.E,1),2,time_slice_init]);
+CF=ncread(mesh_path_first,'calving_front',[1,1,1], [size(mesh_first.E,1),2,time_slice_init]);
+IM=ncread(mesh_path_first,'ice_margin',[1,1,1], [size(mesh_first.E,1),2,time_slice_init]);
+%GIC=ncread(mesh_path_first,'grounded_ice_contour',[1,1,1],[11788,2,time_slice_init]); % not really useful
+
+%add variables of the mesh during the "last" time, even tho it should be
+%the same as mesh is not changing.
+CL2=ncread(mesh_path_first,'coastline',[1,1,1], [size(mesh_first.E,1),2,length(time_slice1)]);
+GL2=ncread(mesh_path_first,'grounding_line',[1,1,1], [size(mesh_first.E,1),2,length(time_slice1)]);
+CF2=ncread(mesh_path_first,'calving_front',[1,1,1], [size(mesh_first.E,1),2,length(time_slice1)]);
+IM2=ncread(mesh_path_first,'ice_margin',[1,1,1], [size(mesh_first.E,1),2,length(time_slice1)]);
 
 if allow_mesh_update
     % path to the new mesh, for now just changing the number here
     mesh_path_update = [ufe_folder_path, '/main_output_ANT_0000',number_mesh,'.nc']; 
     mesh_updated=read_mesh_from_file(mesh_path_update);
-    CL_mesh2=ncread(mesh_path_update,'coastline',[1,1,1], [11788,2,time_slice]);
-    GL_mesh2=ncread(mesh_path_update,'grounding_line',[1,1,1], [11788,2,time_slice]);
-    CF_mesh2=ncread(mesh_path_update,'calving_front',[1,1,1], [11788,2,time_slice]);
+    time_slice2=ncread(mesh_path_update,'time');
+    CL_mesh2=ncread(mesh_path_update,'coastline',[1,1,1], [11788,2,length(time_slice2)]);
+    GL_mesh2=ncread(mesh_path_update,'grounding_line',[1,1,1], [11788,2,length(time_slice2)]);
+    CF_mesh2=ncread(mesh_path_update,'calving_front',[1,1,1], [11788,2,length(time_slice2)]);
 end
 if allow_plot_mesh
     plot_mesh(mesh_first);
@@ -115,6 +129,53 @@ if allow_plot_mesh
         end
     end    
 end
+%% add plots with Voronois cells
+mesh_first.SMB            = ncread( mesh_path_first,'SMB');
+mesh_first.Hi            = ncread( mesh_path_first,'Hi');
+mesh_first.T2m            = ncread( mesh_path_first,'T2m');
+mesh_first.Precip            = ncread( mesh_path_first,'Precip');
+[Hi_fix_mesh, maskHi0_mesh]= Hi0_to_NaN_mesh(mesh_first.Hi);
+
+if allow_mesh_update
+    % path to the new mesh, for now just changing the number here
+    mesh_path_update = [ufe_folder_path, '/main_output_ANT_0000',number_mesh,'.nc']; 
+    mesh_updated=read_mesh_from_file(mesh_path_update);
+    time_slice2=ncread(mesh_path_update,'time');
+    CL_mesh2=ncread(mesh_path_update,'coastline',[1,1,1], [11788,2,length(time_slice2)]);
+    GL_mesh2=ncread(mesh_path_update,'grounding_line',[1,1,1], [11788,2,length(time_slice2)]);
+    CF_mesh2=ncread(mesh_path_update,'calving_front',[1,1,1], [11788,2,length(time_slice2)]);
+    mesh_updated.SMB    = ncread(mesh_path_update, 'SMB');
+    mesh_updated.Hi     = ncread(mesh_path_update, 'Hi');
+    mesh_updated.T2m    = ncread(mesh_path_update, 'T2m');
+    mesh_updated.Precip = ncread(mesh_path_update, 'Precip');
+    [Hi_fix_mesh_updated, maskHi0_mesh_updated]= Hi0_to_NaN_mesh(mesh_updated.Hi);
+end
+% plots
+if allow_plot_mesh
+    plot_mesh_data(mesh_first,mesh_first.Hi(:,1).*maskHi0_mesh(:,1));
+    clim([0 4000]);
+    hold on
+    plot(CF(:,1),CF(:,2),'LineWidth',2,'Color','red');
+    plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
+    plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','green');
+    if allow_save_plots
+        print([path_save,output_folder,'_mesh_1_Hi_t0'],'-dpng','-r300')
+    end
+    if allow_mesh_update
+        % not finised
+    else
+        plot_mesh_data(mesh_first,mesh_first.Hi(:,end).*maskHi0_mesh(:,end));
+        clim([0 4000]);
+        hold on
+        plot(CF(:,1),CF(:,2),'LineWidth',2,'Color','red');
+        plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
+        plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','green');
+        if allow_save_plots
+            print([path_save,output_folder,'_mesh_1_Hi_tf'],'-dpng','-r300')
+        end
+    end
+end
+
 %% add contour lines from the mesh to my plots
 
 figure('position',[100 100 750 750])
@@ -152,16 +213,36 @@ if allow_mesh_update
     plot(CL_mesh2(:,1),CL_mesh2(:,2),'LineWidth',2,'Color','blue');
     plot(GL_mesh2(:,1),GL_mesh2(:,2),'LineWidth',2,'Color','green');
     plot(IM(:,1),IM(:,2),'LineWidth',2,'Color','black','LineStyle','-.');
-    plot(GIC(:,1),GIC(:,2),'LineWidth',2,'Color','yellow','LineStyle','-.');
+    %plot(GIC(:,1),GIC(:,2),'LineWidth',2,'Color','yellow','LineStyle','-.');
 else
-    plot(CF(:,1),CF(:,2),'LineWidth',2,'Color','red');
-    plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
-    plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','green');
-    plot(IM(:,1),IM(:,2),'LineWidth',2,'Color','yellow','LineStyle','-.');
+    plot(CF2(:,1),CF2(:,2),'LineWidth',2,'Color','red');
+    plot(CL2(:,1),CL2(:,2),'LineWidth',2,'Color','blue');
+    plot(GL2(:,1),GL2(:,2),'LineWidth',2,'Color','green');
+    plot(IM2(:,1),IM2(:,2),'LineWidth',2,'Color','yellow','LineStyle','-.');
 end
 if allow_save_plots
     print([path_save,output_folder,'_Hi_tf'],'-dpng','-r300')
 end
+
+% difference
+figure('position',[100 100 750 750])
+hold on
+contourf(x,y,Hi_diff(:,:)',20,'LineColor','none');
+cbar2=colorbar;
+set(gca, 'Position', [0.035, 0.03, 0.83, 0.90]); 
+cbar2.Position(1) = cbar2.Position(1) + 0.03;  % Shift it 0.06 units to the right
+t=title('Ice thickness initial state (m)');
+t.Units='normalized';
+t.Position(2)=1.05;
+clim([min(min(Hi_diff)) max(max(Hi_diff))]);
+%colormap('jet');
+plot(CF(:,1),CF(:,2),'LineWidth',2,'Color','red');
+plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
+plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','green');
+if allow_save_plots
+    print([path_save,output_folder,'_Hi_diff'],'-dpng','-r300')
+end
+
 %% now do same plot with velocities adding the maskHi0
 figure('position',[100 100 500 500])
 hold on
@@ -254,10 +335,10 @@ if allow_mesh_update
     plot(RAISED_20ka_medium.X,RAISED_20ka_medium.Y,'LineWidth',2,'Color','magenta','LineStyle','-.');
     plot(RAISED_20ka_big.X,RAISED_20ka_big.Y,'LineWidth',2,'Color','magenta','LineStyle','-.');
 else
-    plot(CF(:,1),CF(:,2),'LineWidth',2,'Color','red');
-    plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
-    plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','green');
-    plot(IM(:,1),IM(:,2),'LineWidth',2,'Color','black','LineStyle','-.');
+    plot(CF2(:,1),CF2(:,2),'LineWidth',2,'Color','red');
+    plot(CL2(:,1),CL2(:,2),'LineWidth',2,'Color','blue');
+    plot(GL2(:,1),GL2(:,2),'LineWidth',2,'Color','green');
+    plot(IM2(:,1),IM2(:,2),'LineWidth',2,'Color','black','LineStyle','-.');
     plot(RAISED_20ka_small.X,RAISED_20ka_small.Y,'LineWidth',2,'Color','magenta','LineStyle','-.');
     plot(RAISED_20ka_medium.X,RAISED_20ka_medium.Y,'LineWidth',2,'Color','magenta','LineStyle','-.');
     plot(RAISED_20ka_big.X,RAISED_20ka_big.Y,'LineWidth',2,'Color','magenta','LineStyle','-.');
