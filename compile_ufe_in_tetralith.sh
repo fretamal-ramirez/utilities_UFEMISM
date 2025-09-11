@@ -47,6 +47,7 @@ COMMON_FLAGS="-Wall;-ffree-line-length-none;-cpp;-fimplicit-none;-g;-I${NETCDF_I
 
 if [ "$BUILD_TYPE" == "dev" ]; then
     cmake -B build -S . -G Ninja \
+      -DBUILD_UFEMISM=ON \
       -DPETSC_DIR=$PETSC_DIR \
       -DDO_ASSERTIONS=ON \
       -DDO_RESOURCE_TRACKING=ON \
@@ -54,6 +55,7 @@ if [ "$BUILD_TYPE" == "dev" ]; then
       -DCMAKE_EXE_LINKER_FLAGS="-L${NETCDF_LIB} -lnetcdff -lnetcdf"
 elif [ "$BUILD_TYPE" == "perf" ]; then
     cmake -B build -S . -G Ninja \
+      -DBUILD_UFEMISM=ON \
       -DPETSC_DIR=$PETSC_DIR \
       -DDO_ASSERTIONS=OFF \
       -DDO_RESOURCE_TRACKING=OFF \
