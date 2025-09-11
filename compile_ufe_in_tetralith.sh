@@ -52,7 +52,7 @@ if [ "$BUILD_TYPE" == "dev" ]; then
       -DDO_ASSERTIONS=ON \
       -DDO_RESOURCE_TRACKING=ON \
       -DEXTRA_Fortran_FLAGS="${COMMON_FLAGS};-fdiagnostics-color=always;-Og;-Werror=implicit-interface;-fcheck=all;-fbacktrace;-finit-real=nan;-finit-integer=-42;-finit-character=33" \
-      -DCMAKE_EXE_LINKER_FLAGS="-L${NETCDF_LIB} -lnetcdff -lnetcdf"
+      -DCMAKE_EXE_LINKER_FLAGS="-L${PETSC_DIR}/lib -lpetsc -L${NETCDF_LIB} -lnetcdff -lnetcdf"
 elif [ "$BUILD_TYPE" == "perf" ]; then
     cmake -B build -S . -G Ninja \
       -DBUILD_UFEMISM=ON \
