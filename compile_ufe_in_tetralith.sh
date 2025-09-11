@@ -5,7 +5,7 @@ module purge
 module load buildenv-gcc/2022a-eb
 module load netCDF-HDF5/4.9.2-1.12.2-hpc1
 module load METIS/5.1.0 OpenBLAS/0.3.20 FlexiBLAS/3.2.0 FFTW/3.3.10 FFTW.MPI/3.3.10 ScaLAPACK/2.2.0-fb SuiteSparse/5.13.0-METIS-5.1.0
-module load CMake/3.26.4 Ninja/1.11.1
+module load CMake/3.26.4 Ninja/1.11.1 HDF5/1.12.2
 
 # PETSc paths
 export PETSC_DIR=/proj/bolinc/users/x_frare/petsc/petsc_install/3.22.4_gcc2022a_opt_g
@@ -50,7 +50,7 @@ if [ "$BUILD_TYPE" == "dev" ]; then
       -DPETSC_DIR=$PETSC_DIR \
       -DDO_ASSERTIONS=ON \
       -DDO_RESOURCE_TRACKING=ON \
-      -DEXTRA_Fortran_FLAGS="${COMMON_FLAGS};-Og;-Werror=implicit-interface;-fcheck=all;-fbacktrace;-finit-real=nan;-finit-integer=-42;-finit-character=33"
+      -DEXTRA_Fortran_FLAGS="${COMMON_FLAGS};-Og;-Werror=implicit-interface;-fcheck=all;-fbacktrace;-finit-real=nan;-finit-integer=-42;-finit-character=33" \
       -DCMAKE_EXE_LINKER_FLAGS="-L${NETCDF_LIB} -lnetcdff -lnetcdf"
 elif [ "$BUILD_TYPE" == "perf" ]; then
     cmake -B build -S . -G Ninja \
@@ -68,11 +68,13 @@ ninja -C build -v
 
 # Copy binary to top directory
 BINNAME=UFEMISM_program
+BINPATH=build/src/UFEMISM/${BINNAME}
+
 if [ "$BUILD_TYPE" == "dev" ]; then
-    cp build/${BINNAME} ${BINNAME}_dev
+    cp ${BINPATH} ${BINNAME}_dev
     cp ${BINNAME}_dev ${BINNAME}
 elif [ "$BUILD_TYPE" == "perf" ]; then
-    cp build/${BINNAME} ${BINNAME}_perf
+    cp ${BINPATH} ${BINNAME}_perf
     cp ${BINNAME}_perf ${BINNAME}
 fi
 
