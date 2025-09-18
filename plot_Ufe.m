@@ -2,10 +2,10 @@
 clear all; clc;
 
 %========= PATH TO OUTPUT UFEMISM DIRECTORY ==========
-output_folder = 'results_ant_PD_inversion_dHdt';
-ufe_folder_path=['/Users/frre9931/Desktop/UFEMISM2.0_main/UFEMISM2.0/', output_folder];
+output_folder = 'results_ant_PD_inversion_dHdt_init_ROI_gamma10';
+%ufe_folder_path=['/Users/frre9931/Desktop/UFEMISM2.0_main/UFEMISM2.0/', output_folder];
 %ufe_folder_path=['/Users/frre9931/Desktop/UFEMISM2.0_porting/', output_folder];
-%ufe_folder_path=['/Users/frre9931/Desktop/tetralith_results/', output_folder];
+ufe_folder_path=['/Users/frre9931/Desktop/tetralith_results/', output_folder];
 allow_plot_mesh = true; % if we want to plot the mesh
 allow_save_plots = false;
 path_save = '/Users/frre9931/Documents/PhD/ANT_UFEMISM/plots_ant/';
@@ -16,12 +16,14 @@ number_mesh ='2'; % i.e. 2 for main_output_ANT_00002.nc
 ROI_set = false; % if exist at least one ROI
 %ROI='LarsenC';
 ROI='Antarctic_Peninsula'; 
+plot_Voronoi=true;
 %========= END OF CONFIGURATION ======================
 
 % add functions from UFEMISM library
 path(path,genpath('/Users/frre9931/Desktop/UFEMISM2.0_main/UFEMISM2.0/tools/matlab'));
 path(path,genpath('/Users/frre9931/Documents/PhD/m_map'));
 path(path,genpath('/Users/frre9931/Documents/PhD/Antarctic-Mapping-Tools-main'));
+path(path,genpath('/Users/frre9931/Documents/PhD/cptcmap-pkg/cptcmap'));
 
 % load the coastline from MEaSUREs
 coast_MEaSUREs=shaperead('/Users/frre9931/Documents/PhD/MEaSUREs/Coastline_Antarctica_v02.shp');
@@ -91,12 +93,11 @@ CF=ncread(mesh_path_first,'calving_front',[1,1,1], [size(mesh_first.E,1),2,time_
 IM=ncread(mesh_path_first,'ice_margin',[1,1,1], [size(mesh_first.E,1),2,time_slice_init]);
 %GIC=ncread(mesh_path_first,'grounded_ice_contour',[1,1,1],[11788,2,time_slice_init]); % not really useful
 
-%add variables of the mesh during the "last" time, even tho it should be
-%the same as mesh is not changing.
-CL2=ncread(mesh_path_first,'coastline',[1,1,1], [size(mesh_first.E,1),2,length(time_slice1)]);
-GL2=ncread(mesh_path_first,'grounding_line',[1,1,1], [size(mesh_first.E,1),2,length(time_slice1)]);
-CF2=ncread(mesh_path_first,'calving_front',[1,1,1], [size(mesh_first.E,1),2,length(time_slice1)]);
-IM2=ncread(mesh_path_first,'ice_margin',[1,1,1], [size(mesh_first.E,1),2,length(time_slice1)]);
+%add variables of the mesh during the "last" time,
+CL2=ncread(mesh_path_first,'coastline',[1,1,length(time_slice1)], [size(mesh_first.E,1),2,1]);
+GL2=ncread(mesh_path_first,'grounding_line',[1,1,length(time_slice1)], [size(mesh_first.E,1),2,1]);
+CF2=ncread(mesh_path_first,'calving_front',[1,1,length(time_slice1)], [size(mesh_first.E,1),2,1]);
+IM2=ncread(mesh_path_first,'ice_margin',[1,1,length(time_slice1)], [size(mesh_first.E,1),2,1]);
 
 if allow_mesh_update
     % path to the new mesh, for now just changing the number here
@@ -113,6 +114,12 @@ if allow_plot_mesh
     plot(CF(:,1),CF(:,2),'LineWidth',2,'Color','red');
     plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
     plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','green');
+    hold off
+    plot_mesh(mesh_first);
+    hold on
+    plot(CF2(:,1),CF2(:,2),'LineWidth',2,'Color','red');
+    plot(CL2(:,1),CL2(:,2),'LineWidth',2,'Color','blue');
+    plot(GL2(:,1),GL2(:,2),'LineWidth',2,'Color','green');
     hold off
     if allow_save_plots
         print([path_save,output_folder,'_mesh_1'],'-dpng','-r300')
@@ -134,7 +141,10 @@ mesh_first.SMB            = ncread( mesh_path_first,'SMB');
 mesh_first.Hi            = ncread( mesh_path_first,'Hi');
 mesh_first.T2m            = ncread( mesh_path_first,'T2m');
 mesh_first.Precip            = ncread( mesh_path_first,'Precip');
+mesh_first.uabs              = ncread( mesh_path_first,'uabs_surf');
+mesh_first.BMB               = ncread( mesh_path_first,'BMB');
 [Hi_fix_mesh, maskHi0_mesh]= Hi0_to_NaN_mesh(mesh_first.Hi);
+mesh_first.mask = ncread( mesh_path_first, 'mask');
 
 if allow_mesh_update
     % path to the new mesh, for now just changing the number here
@@ -144,10 +154,13 @@ if allow_mesh_update
     CL_mesh2=ncread(mesh_path_update,'coastline',[1,1,1], [11788,2,length(time_slice2)]);
     GL_mesh2=ncread(mesh_path_update,'grounding_line',[1,1,1], [11788,2,length(time_slice2)]);
     CF_mesh2=ncread(mesh_path_update,'calving_front',[1,1,1], [11788,2,length(time_slice2)]);
+    IM_mesh2=ncread(mesh_path_update,'ice_margin',[1,1,1], [11788,2,length(time_slice2)]);
     mesh_updated.SMB    = ncread(mesh_path_update, 'SMB');
     mesh_updated.Hi     = ncread(mesh_path_update, 'Hi');
     mesh_updated.T2m    = ncread(mesh_path_update, 'T2m');
     mesh_updated.Precip = ncread(mesh_path_update, 'Precip');
+    mesh_updated.uabs   = ncread(mesh_path_update,'uabs_surf');
+    mesh_updated.BMB    = ncread(mesh_path_update, 'BMB');
     [Hi_fix_mesh_updated, maskHi0_mesh_updated]= Hi0_to_NaN_mesh(mesh_updated.Hi);
 end
 % plots
@@ -155,43 +168,133 @@ if allow_plot_mesh
     plot_mesh_data(mesh_first,mesh_first.Hi(:,1).*maskHi0_mesh(:,1));
     clim([0 4000]);
     hold on
-    plot(CF(:,1),CF(:,2),'LineWidth',2,'Color','red');
-    plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
-    plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','green');
+    %plot(CF(:,1),CF(:,2),'LineWidth',2,'Color','red');
+    %plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
+    plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','red');
+    plot(IM(:,1),IM(:,2),'LineWidth',2,'Color','black');
     if allow_save_plots
         print([path_save,output_folder,'_mesh_1_Hi_t0'],'-dpng','-r300')
     end
     if allow_mesh_update
-        % not finised
+        plot_mesh_data(mesh_updated,mesh_updated.Hi(:,length(time_slice2)).*maskHi0_mesh_updated(:,length(time_slice2)));
+        clim([0 4000]);
+        hold on
+        plot(IM(:,1),IM(:,2),'LineWidth',2,'Color','black');
+        plot(GL_mesh2(:,1),GL_mesh2(:,2),'LineWidth',2,'Color','red');
+        t=title('Ice thickness - AWIESM1 (m)');
+        t.Units='normalized';
     else
         plot_mesh_data(mesh_first,mesh_first.Hi(:,end).*maskHi0_mesh(:,end));
         clim([0 4000]);
         hold on
-        plot(CF(:,1),CF(:,2),'LineWidth',2,'Color','red');
-        plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
-        plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','green');
+        %plot(CF(:,1),CF(:,2),'LineWidth',2,'Color','red');
+        %plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
+        plot(GL2(:,1),GL2(:,2),'LineWidth',2,'Color','red');
+        plot(IM2(:,1),IM2(:,2),'LineWidth',2,'Color','black');
         if allow_save_plots
             print([path_save,output_folder,'_mesh_1_Hi_tf'],'-dpng','-r300')
         end
     end
 end
-
+% ====================
+%  plot for velocities
+% ====================
+if allow_plot_mesh
+    plot_mesh_data(mesh_first,log(mesh_first.uabs(:,1)));
+    hold on
+    plot(CF(:,1),CF(:,2),'LineWidth',2,'Color','red');
+    plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
+    plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','green');
+    set(gca,'ColorScale','log')
+    clim([10^-1 10^1]);
+    if allow_save_plots
+        print([path_save,output_folder,'_mesh_1_uabs_t0'],'-dpng','-r300')
+    end
+    if allow_mesh_update
+        plot_mesh_data(mesh_updated,log(mesh_updated.uabs(:,length(time_slice2))));
+        hold on
+        plot(IM_mesh2(:,1),IM_mesh2(:,2),'LineWidth',2,'Color','black');
+        plot(GL_mesh2(:,1),GL_mesh2(:,2),'LineWidth',2,'Color','red');
+        set(gca,'ColorScale','log')
+        clim([10^-1 10^1]);
+    else
+        plot_mesh_data(mesh_first,log(mesh_first.uabs(:,end)));
+        hold on
+        plot(GL2(:,1),GL2(:,2),'LineWidth',2,'Color','red');
+        plot(IM2(:,1),IM2(:,2),'LineWidth',2,'Color','black');
+        set(gca,'ColorScale','log')
+        clim([10^-1 10^1]);
+        if allow_save_plots
+            print([path_save,output_folder,'_mesh_1_uabs_tf'],'-dpng','-r300')
+        end
+    end
+    if allow_save_plots
+        print([path_save,output_folder,'_mesh_2_uabs_tf'],'-dpng','-r300')
+    end
+end
+%========================
+% plot for BMB
+% =======================
+if allow_plot_mesh
+    plot_mesh_data(mesh_first,mesh_first.BMB(:,1));
+    hold on
+    plot(IM(:,1),IM(:,2),'LineWidth',2,'Color','black');
+    plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','black');
+    cptcmap('GMT_polar','flip',true,'ncol',100);
+    clim([-3 3]);
+    if allow_save_plots
+        print([path_save,output_folder,'_mesh_1_BMB_t0'],'-dpng','-r300')
+    end
+    if allow_mesh_update
+        plot_mesh_data(mesh_updated,mesh_updated.BMB(:,length(time_slice2)));
+        hold on
+        plot(IM_mesh2(:,1),IM_mesh2(:,2),'LineWidth',2,'Color','black');
+        plot(GL_mesh2(:,1),GL_mesh2(:,2),'LineWidth',2,'Color','red');
+        cptcmap('GMT_polar','flip',true,'ncol',100);
+        clim([-3 3]);
+        if allow_save_plots
+          print([path_save,output_folder,'_mesh_2_BMB_tf'],'-dpng','-r300')
+        end
+    else
+        plot_mesh_data(mesh_first,mesh_first.BMB(:,end));
+        hold on
+        plot(GL2(:,1),GL2(:,2),'LineWidth',2,'Color','black');
+        plot(IM2(:,1),IM2(:,2),'LineWidth',2,'Color','black');
+        cptcmap('GMT_polar','flip',true,'ncol',100);
+        clim([-3 3]);
+        if allow_save_plots
+            print([path_save,output_folder,'_mesh_1_BMB_tf'],'-dpng','-r300')
+        end
+    end
+end
 %% add contour lines from the mesh to my plots
+% Set up GUI
+wa = 750;
+ha = 750;
 
-figure('position',[100 100 750 750])
+margins_hor = [125,125];
+margins_ver = [125,50];
+
+wf = margins_hor( 1) + wa + margins_hor( 2);
+hf = margins_ver( 1) + ha + margins_ver( 2);
+
+H.Fig = figure( 'position',[100,100,wf,hf],'color','w');
+H.Ax  = axes('parent',H.Fig,'units','pixels','position',[margins_hor(1),margins_ver(1),wa,ha],...
+  'xlim',[min(x)+3e4 max(x)-3e4],'ylim',[min(y)+3e4 max(y)-3e4],'fontsize',24,'xgrid','on','ygrid','on');
+%figure('position',[100 100 750 750])
 hold on
 contourf(x,y,Hi_fix(:,:,1)',20,'LineColor','none');
 cbar2=colorbar;
-set(gca, 'Position', [0.035, 0.03, 0.83, 0.90]); 
-cbar2.Position(1) = cbar2.Position(1) + 0.03;  % Shift it 0.06 units to the right
-t=title('Ice thickness initial state (m)');
+%set(gca, 'Position', [0.035, 0.03, 0.83, 0.90]); 
+%cbar2.Position(1) = cbar2.Position(1) + 0.03;  % Shift it 0.06 units to the right
+t=title('Ice thickness (m)');
 t.Units='normalized';
-t.Position(2)=1.05;
+%t.Position(2)=1.05;
 clim([0 4000]);
 %colormap('jet');
-plot(CF(:,1),CF(:,2),'LineWidth',2,'Color','red');
-plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
-plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','green');
+%plot(CF(:,1),CF(:,2),'LineWidth',2,'Color','black');
+%plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
+plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','black');
 if allow_save_plots
     print([path_save,output_folder,'_Hi_t0'],'-dpng','-r300')
 end
@@ -246,15 +349,16 @@ end
 %% now do same plot with velocities adding the maskHi0
 figure('position',[100 100 500 500])
 hold on
-contourf(x,y,(uabs_surf(:,:,1).*maskHi0(:,:,1))',20,'LineColor','none');
+contourf(x,y,log((uabs_surf(:,:,1).*maskHi0(:,:,1))'),20,'LineColor','none');
 cbar2=colorbar;
 set(gca, 'Position', [0.035, 0.03, 0.83, 0.90]); 
 cbar2.Position(1) = cbar2.Position(1) + 0.03;  % Shift it 0.06 units to the right
 t=title('Initial surface ice velocity (m/yr)');
 t.Units='normalized';
 t.Position(2)=1.05;
-clim([0 1500]);
-
+set(gca,'ColorScale','log')
+clim([10^-1 10^1]);
+colormap('hsv');
 plot(CF(:,1),CF(:,2),'LineWidth',2,'Color','red');
 plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
 plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','green');
@@ -264,14 +368,15 @@ end
 
 figure('position',[100 100 500 500])
 hold on
-contourf(x,y,(uabs_surf(:,:,end).*maskHi0(:,:,end))',20,'LineColor','none');
+contourf(x,y,log((uabs_surf(:,:,end).*maskHi0(:,:,end))'),50,'LineColor','none');
 cbar2=colorbar;
-set(gca, 'Position', [0.035, 0.03, 0.83, 0.90]); 
+set(gca, 'Position', [0.035, 0.03, 0.83, 0.90],'ColorScale','log'); 
 cbar2.Position(1) = cbar2.Position(1) + 0.03;  % Shift it 0.06 units to the right
 t=title('Final surface ice velocity (m/yr)');
 t.Units='normalized';
 t.Position(2)=1.05;
-clim([0 1500]);
+%set(gca,'ColorScale','log')
+clim([10^-2 10^1]);
 if allow_mesh_update
     plot(CF_mesh2(:,1),CF_mesh2(:,2),'LineWidth',2,'Color','red');
     plot(CL_mesh2(:,1),CL_mesh2(:,2),'LineWidth',2,'Color','blue');
@@ -348,7 +453,93 @@ if allow_save_plots
 end
 
 end % if ROI_set
-%% MOVED A LOT OF THINGS TO HERE FOR NOW, CHECK WHAT IS USEFUL
+%% Implement a plot with a zoom into a desired regions, without ROI.
+
+% Plot range for Antarctic Peninsula
+xmid = -2200e3;
+ymid =  1200e3;
+wx    = 600e3;
+wy    = 800e3;
+
+xmin = xmid - wx;
+xmax = xmid + wx;
+ymin = ymid - wy;
+ymax = ymid + wy;
+
+wa = 750;
+ha = 750;
+
+margins_hor = [125,125];
+margins_ver = [125,50];
+
+wf = margins_hor( 1) + wa + margins_hor( 2);
+hf = margins_ver( 1) + ha + margins_ver( 2);
+if plot_Voronoi
+edgecolor = 'none';
+mesh=mesh_updated;
+d=mesh_updated.Hi(:,length(time_slice2)).*maskHi0_mesh_updated(:,length(time_slice2));
+H.Fig = figure('position',[200,200,wf,hf],'color','w');
+H.Ax  = axes('parent',H.Fig,'units','pixels','position',[margins_hor(1),margins_ver(1),wa,ha],...
+  'xlim',[xmin,xmax],'ylim',[ymin,ymax],'fontsize',24,'xgrid','on','ygrid','on');
+
+if isfield( mesh, 'VVor')
+  H.Patch = patch('vertices',mesh.Vor,'faces',changem(double(mesh.VVor),NaN),...
+    'facecolor','flat','facevertexcdata',d,'edgecolor',edgecolor);
+else
+  H.Patch = patch('vertices',mesh.V( 1:mesh.nV,:),'faces',mesh.Tri( 1:mesh.nTri,:),...
+    'facecolor','interp','facevertexcdata',d,'edgecolor',edgecolor);
+end
+
+pos = get( H.Ax,'position');
+H.Cbar = colorbar( H.Ax,'location','eastoutside');
+set( H.Ax,'position',pos);
+set( H.Ax,'units','normalized');
+hold on
+plot(GL_mesh2(:,1),GL_mesh2(:,2),'LineWidth',2,'Color','red');
+
+else
+H.Fig = figure( 'position',[100,100,wf,hf],'color','w');
+H.Ax  = axes('parent',H.Fig,'units','pixels','position',[margins_hor(1),margins_ver(1),wa,ha],...
+  'xlim',[xmin,xmax],'ylim',[ymin,ymax],'fontsize',24,'xgrid','on','ygrid','on');
+hold on
+contourf(x,y,Hi_fix(:,:,end)',20,'LineColor','none');
+end
+plot(RAISED_20ka_small.X,RAISED_20ka_small.Y,'LineWidth',2,'Color','magenta','LineStyle','-.');
+plot(RAISED_20ka_medium.X,RAISED_20ka_medium.Y,'LineWidth',2,'Color','magenta','LineStyle','-.');
+plot(RAISED_20ka_big.X,RAISED_20ka_big.Y,'LineWidth',2,'Color','magenta','LineStyle','-.');
+plot(IM(:,1),IM(:,2),'LineWidth',2,'Color','black','LineStyle','-.');
+
+cbar2=colorbar;
+clim([0 2500]);
+t=title('Ice thickness - AWIESM1 (m)');
+t.Units='normalized';
+hold off
+if allow_save_plots
+    print([path_save,output_folder,'_Hi_tf_AP2'],'-dpng','-r300')
+end
+uv_step=1:10:length(x);
+%quiver(x(uv_step),y(uv_step),(u_surf(uv_step,uv_step,end).*maskHi0(uv_step,uv_step,end))',...
+%    (v_surf(uv_step,uv_step,end).*maskHi0(uv_step,uv_step,end))',10,'LineStyle','-',...
+%    'color','black');
+
+% repeat same plot with uabs
+H.Fig = figure( 'position',[100,100,wf,hf],'color','w');
+H.Ax  = axes('parent',H.Fig,'units','pixels','position',[margins_hor(1),margins_ver(1),wa,ha],...
+  'xlim',[xmin,xmax],'ylim',[ymin,ymax],'fontsize',24,'xgrid','on','ygrid','on');
+hold on
+contourf(x,y,(uabs_surf(:,:,end).*maskHi0(:,:,end))',20,'LineColor','none');
+plot(RAISED_20ka_small.X,RAISED_20ka_small.Y,'LineWidth',2,'Color','magenta','LineStyle','-.');
+plot(RAISED_20ka_medium.X,RAISED_20ka_medium.Y,'LineWidth',2,'Color','magenta','LineStyle','-.');
+plot(RAISED_20ka_big.X,RAISED_20ka_big.Y,'LineWidth',2,'Color','magenta','LineStyle','-.');
+plot(IM(:,1),IM(:,2),'LineWidth',2,'Color','black','LineStyle','-.');
+cbar2=colorbar;
+clim([0 1000]);
+t=title('Surface ice velocity - AWIESM1 (m/yr)');
+t.Units='normalized';
+if allow_save_plots
+    print([path_save,output_folder,'_uabs_tf_AP'],'-dpng','-r300')
+end
+%%
 
 
 
@@ -364,9 +555,7 @@ end % if ROI_set
 
 
 
-
-
-
+%%
 % figure of Hb difference
 figure('position',[100 100 500 500])
 m_proj('stereographic','lat',-90,'long',0,'radius',37,'rectbox','on');
