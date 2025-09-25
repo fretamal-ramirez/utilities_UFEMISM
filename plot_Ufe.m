@@ -2,7 +2,7 @@
 clear all; clc;
 
 %========= PATH TO OUTPUT UFEMISM DIRECTORY ==========
-output_folder = 'results_ant_PD_inversion_dHdt_init_ROI_gamma10';
+output_folder = 'results_ant_PD_inversion_dHdt_init_R-LIS_gamma10_HR';
 %ufe_folder_path=['/Users/frre9931/Desktop/UFEMISM2.0_main/UFEMISM2.0/', output_folder];
 %ufe_folder_path=['/Users/frre9931/Desktop/UFEMISM2.0_porting/', output_folder];
 ufe_folder_path=['/Users/frre9931/Desktop/tetralith_results/', output_folder];
@@ -99,6 +99,12 @@ GL2=ncread(mesh_path_first,'grounding_line',[1,1,length(time_slice1)], [size(mes
 CF2=ncread(mesh_path_first,'calving_front',[1,1,length(time_slice1)], [size(mesh_first.E,1),2,1]);
 IM2=ncread(mesh_path_first,'ice_margin',[1,1,length(time_slice1)], [size(mesh_first.E,1),2,1]);
 
+CL3=ncread(mesh_path_first,'coastline',[1,1,length(time_slice1)-10], [size(mesh_first.E,1),2,1]);
+GL3=ncread(mesh_path_first,'grounding_line',[1,1,length(time_slice1)-10], [size(mesh_first.E,1),2,1]);
+CF3=ncread(mesh_path_first,'calving_front',[1,1,length(time_slice1)-10], [size(mesh_first.E,1),2,1]);
+IM3=ncread(mesh_path_first,'ice_margin',[1,1,length(time_slice1)-10], [size(mesh_first.E,1),2,1]);
+
+
 if allow_mesh_update
     % path to the new mesh, for now just changing the number here
     mesh_path_update = [ufe_folder_path, '/main_output_ANT_0000',number_mesh,'.nc']; 
@@ -115,12 +121,6 @@ if allow_plot_mesh
     plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
     plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','green');
     hold off
-    plot_mesh(mesh_first);
-    hold on
-    plot(CF2(:,1),CF2(:,2),'LineWidth',2,'Color','red');
-    plot(CL2(:,1),CL2(:,2),'LineWidth',2,'Color','blue');
-    plot(GL2(:,1),GL2(:,2),'LineWidth',2,'Color','green');
-    hold off
     if allow_save_plots
         print([path_save,output_folder,'_mesh_1'],'-dpng','-r300')
     end
@@ -134,6 +134,13 @@ if allow_plot_mesh
         if allow_save_plots
             print([path_save,output_folder,'_mesh_',number_mesh],'-dpng','-r300')
         end
+    else
+        plot_mesh(mesh_first);
+        hold on
+        plot(CF2(:,1),CF2(:,2),'LineWidth',2,'Color','red');
+        plot(CL2(:,1),CL2(:,2),'LineWidth',2,'Color','blue');
+        plot(GL2(:,1),GL2(:,2),'LineWidth',2,'Color','green');
+        hold off
     end    
 end
 %% add plots with Voronois cells
@@ -163,15 +170,56 @@ if allow_mesh_update
     mesh_updated.BMB    = ncread(mesh_path_update, 'BMB');
     [Hi_fix_mesh_updated, maskHi0_mesh_updated]= Hi0_to_NaN_mesh(mesh_updated.Hi);
 end
+% polygon for R-LIS
+V = [
+-0.6469e6, 1.6448e6
+-0.6507e6, 1.7370e6
+  -0.6411e6, 1.8005e6
+  -0.5989e6, 1.8370e6
+  -0.5508e6, 1.8639e6
+  -0.5104e6, 1.9081e6
+  -0.4758e6, 1.9331e6
+  -0.4451e6, 1.9542e6
+  -0.4393e6, 1.9946e6
+  -0.3336e6, 1.9720e6
+  -0.3048e6, 1.9292e6
+  -0.2644e6, 1.9081e6
+  -0.2029e6, 1.8927e6
+  -0.1741e6, 1.8716e6
+  -0.1558e6, 1.8351e6
+  -0.1414e6, 1.8043e6
+  -0.1222e6, 1.7659e6
+  -0.1057e6, 1.7269e6
+  -0.1318e6, 1.6928e6
+  -0.1644e6, 1.6640e6
+  -0.2125e6, 1.6275e6
+  -0.2394e6, 1.5948e6
+  -0.2663e6, 1.5833e6
+  -0.3259e6, 1.5813e6
+  -0.3778e6, 1.5717e6
+  -0.4201e6, 1.5640e6
+  -0.4528e6, 1.5640e6
+  -0.4931e6, 1.5660e6
+  -0.5354e6, 1.5698e6
+  -0.5758e6, 1.5871e6
+  -0.6142e6, 1.6102e6    ];
+Tri = 1:length(V);
+%fprintf('  poly(%3d,:) = [%.4e_dp,%.4e_dp]\n',[(Tri)',V(:,1),V(:,2)].')
+ice_boundaries=shaperead('/Users/frre9931/Documents/PhD/MEaSUREs/IceBoundaries_Antarctica_v02.shp');
 % plots
+% ice thickness
 if allow_plot_mesh
     plot_mesh_data(mesh_first,mesh_first.Hi(:,1).*maskHi0_mesh(:,1));
     clim([0 4000]);
     hold on
+    %patch('vertices',V,'faces',Tri,'facecolor','none','edgecolor','r','linewidth',3,'marker','o');
     %plot(CF(:,1),CF(:,2),'LineWidth',2,'Color','red');
     %plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
     plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','red');
     plot(IM(:,1),IM(:,2),'LineWidth',2,'Color','black');
+    t=title(output_folder);
+    t.Units='normalized';
+    %plot(ice_boundaries(5).X,ice_boundaries(5).Y,'LineWidth',2)
     if allow_save_plots
         print([path_save,output_folder,'_mesh_1_Hi_t0'],'-dpng','-r300')
     end
@@ -181,7 +229,7 @@ if allow_plot_mesh
         hold on
         plot(IM(:,1),IM(:,2),'LineWidth',2,'Color','black');
         plot(GL_mesh2(:,1),GL_mesh2(:,2),'LineWidth',2,'Color','red');
-        t=title('Ice thickness - AWIESM1 (m)');
+        t=title(output_folder);
         t.Units='normalized';
     else
         plot_mesh_data(mesh_first,mesh_first.Hi(:,end).*maskHi0_mesh(:,end));
@@ -191,6 +239,8 @@ if allow_plot_mesh
         %plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
         plot(GL2(:,1),GL2(:,2),'LineWidth',2,'Color','red');
         plot(IM2(:,1),IM2(:,2),'LineWidth',2,'Color','black');
+        t=title(output_folder);
+        t.Units='normalized';
         if allow_save_plots
             print([path_save,output_folder,'_mesh_1_Hi_tf'],'-dpng','-r300')
         end
@@ -208,7 +258,7 @@ if allow_plot_mesh
     set(gca,'ColorScale','log')
     clim([10^-1 10^1]);
     if allow_save_plots
-        print([path_save,output_folder,'_mesh_1_uabs_t0'],'-dpng','-r300')
+        %print([path_save,output_folder,'_mesh_1_uabs_t0'],'-dpng','-r300')
     end
     if allow_mesh_update
         plot_mesh_data(mesh_updated,log(mesh_updated.uabs(:,length(time_slice2))));
@@ -228,9 +278,6 @@ if allow_plot_mesh
             print([path_save,output_folder,'_mesh_1_uabs_tf'],'-dpng','-r300')
         end
     end
-    if allow_save_plots
-        print([path_save,output_folder,'_mesh_2_uabs_tf'],'-dpng','-r300')
-    end
 end
 %========================
 % plot for BMB
@@ -241,7 +288,9 @@ if allow_plot_mesh
     plot(IM(:,1),IM(:,2),'LineWidth',2,'Color','black');
     plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','black');
     cptcmap('GMT_polar','flip',true,'ncol',100);
-    clim([-3 3]);
+    clim([-2 2]);
+    t=title(output_folder);
+    t.Units='normalized';
     if allow_save_plots
         print([path_save,output_folder,'_mesh_1_BMB_t0'],'-dpng','-r300')
     end
@@ -251,17 +300,22 @@ if allow_plot_mesh
         plot(IM_mesh2(:,1),IM_mesh2(:,2),'LineWidth',2,'Color','black');
         plot(GL_mesh2(:,1),GL_mesh2(:,2),'LineWidth',2,'Color','red');
         cptcmap('GMT_polar','flip',true,'ncol',100);
-        clim([-3 3]);
+        clim([-2 2]);
         if allow_save_plots
           print([path_save,output_folder,'_mesh_2_BMB_tf'],'-dpng','-r300')
         end
     else
-        plot_mesh_data(mesh_first,mesh_first.BMB(:,end));
+        plot_mesh_data(mesh_first,mesh_first.BMB(:,end-10));
         hold on
         plot(GL2(:,1),GL2(:,2),'LineWidth',2,'Color','black');
         plot(IM2(:,1),IM2(:,2),'LineWidth',2,'Color','black');
+        plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','green','linestyle', ...
+            '--');
+        plot(IM(:,1),IM(:,2),'LineWidth',2,'Color','red','LineStyle','--');
         cptcmap('GMT_polar','flip',true,'ncol',100);
-        clim([-3 3]);
+        clim([-2 2]);
+        t=title(output_folder);
+        t.Units='normalized';
         if allow_save_plots
             print([path_save,output_folder,'_mesh_1_BMB_tf'],'-dpng','-r300')
         end
@@ -539,8 +593,66 @@ t.Units='normalized';
 if allow_save_plots
     print([path_save,output_folder,'_uabs_tf_AP'],'-dpng','-r300')
 end
-%%
+%% create an artifical mask for ice shelf ISMIP6 experiment, just for testing
+% create a mask from grid BMB, basically were it exist BMB put a 1 bcs is
+% an ice shelf
+faketime=[2000:10:2300];
+shelf_mask=ones([size(BMB(:,:,1)) length(faketime)]);
+% I need to stack this with time variable... because the input is expected
+% to have time!
+mask_ismip6=shelf_mask;
+mask_ismip6(:,:,1)=shelf_mask(:,:,1).*BMB(:,:,1);
+pos_val1=find(mask_ismip6(:,:,1) > 0 | mask_ismip6(:,:,1)<0);
+mask_ismip6(pos_val1)=1;
+for k=1:length(faketime)
+    mask_ismip6(:,:,k)=mask_ismip6(:,:,1);
+end
+% save netcdf file using x,y from file
+ncid = netcdf.create(['/Users/frre9931/Documents/PhD/ANT_UFEMISM/mask_ismip6_test.nc'],'CLOBBER');
 
+% Define dimensions
+% =================
+
+dim_x = netcdf.defDim(ncid,'x',size(x,1));
+dim_y = netcdf.defDim(ncid,'y',size(y,1));
+dim_time = netcdf.defDim(ncid,'time',size(faketime,2));
+
+% Define variables
+% ================
+
+id_x = netcdf.defVar(ncid,'x','double',dim_x);
+id_y = netcdf.defVar(ncid,'y','double',dim_y);
+id_time = netcdf.defVar(ncid,'time','double',dim_time);
+id_mask_ismip6  = netcdf.defVar(ncid,'mask','double',[dim_x, dim_y, dim_time]);
+
+% Add information to variables
+% ==================
+
+netcdf.putAtt(ncid,id_x,'standard_name','x'); 
+netcdf.putAtt(ncid,id_y,'standard_name','y');
+
+netcdf.putAtt(ncid,id_mask_ismip6,'standard_name','Ice shelf mask to melt'); 
+netcdf.putAtt(ncid,id_time,'standard_name','time');
+netcdf.putAtt(ncid,id_time,'units','years');
+
+% End definition mode
+% ===================
+
+netcdf.endDef(ncid)
+
+% Save data
+% =========
+
+netcdf.putVar(ncid,id_x,x);
+netcdf.putVar(ncid,id_y,y);
+netcdf.putVar(ncid,id_time,faketime);
+
+netcdf.putVar(ncid,id_mask_ismip6,mask_ismip6);
+
+% Close file
+% ==========
+
+netcdf.close(ncid);
 
 
 
