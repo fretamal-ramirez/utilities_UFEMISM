@@ -1,0 +1,251 @@
+% code to load and read variables from UFEMISM simulations
+clear all; clc;
+
+%========= PATH TO OUTPUT UFEMISM DIRECTORY ==========
+output_folder = 'results_ant_PD_inversion_dHdt_init_R-LISonly_g20_relax1';
+%ufe_folder_path=['/Users/frre9931/Desktop/UFEMISM2.0_main/UFEMISM2.0/', output_folder];
+%ufe_folder_path=['/Users/frre9931/Desktop/UFEMISM2.0_porting/', output_folder];
+ufe_folder_path=['/Users/frre9931/Desktop/tetralith_results/', output_folder];
+allow_plot_mesh = true; % if we want to plot the mesh
+allow_save_plots = false;
+path_save = '/Users/frre9931/Documents/PhD/ANT_UFEMISM/plots_ant/Riiser-Larsen';
+allow_mesh_update = false; % if remeshing is allowed in simulation
+% number pointing the file with updated mesh
+number_mesh ='2'; % i.e. 2 for main_output_ANT_00002.nc
+plot_Voronoi=true;
+%========= END OF CONFIGURATION ======================
+
+% add functions from UFEMISM library
+path(path,genpath('/Users/frre9931/Desktop/UFEMISM2.0_main/UFEMISM2.0/tools/matlab'));
+path(path,genpath('/Users/frre9931/Documents/PhD/m_map'));
+path(path,genpath('/Users/frre9931/Documents/PhD/Antarctic-Mapping-Tools-main'));
+path(path,genpath('/Users/frre9931/Documents/PhD/cptcmap-pkg/cptcmap'));
+
+% load the coastline from MEaSUREs
+coast_MEaSUREs=shaperead('/Users/frre9931/Documents/PhD/MEaSUREs/Coastline_Antarctica_v02.shp');
+%function from Antarctic Maping Tools to project from x,y to lon,lat
+[coast_lat,coast_lon]=ps2ll(coast_MEaSUREs.X,coast_MEaSUREs.Y);
+%u_MEaSUREs=ncread('/Users/frre9931/Documents/PhD/MEaSUREs/antarctica_ice_velocity_450m_v2.nc','VX');
+%v_MEaSUREs=ncread('/Users/frre9931/Documents/PhD/MEaSUREs/antarctica_ice_velocity_450m_v2.nc','VY');
+uabs_MEaSUREs=ncread('/Users/frre9931/Desktop/UFEMISM2.0_main/UFEMISM2.0/data/MEaSUREs/Antarctica/surface_velocity_measures_2km.nc','uabs_surf');
+x_MEaSUREs=ncread('/Users/frre9931/Desktop/UFEMISM2.0_main/UFEMISM2.0/data/MEaSUREs/Antarctica/surface_velocity_measures_2km.nc','x');
+y_MEaSUREs=ncread('/Users/frre9931/Desktop/UFEMISM2.0_main/UFEMISM2.0/data/MEaSUREs/Antarctica/surface_velocity_measures_2km.nc','y');
+% change -10000 to NaN for plots
+for i=1:length(uabs_MEaSUREs(:,1))
+    for j=1:length(uabs_MEaSUREs(1,:))
+        if uabs_MEaSUREs(i,j)==-10000
+            uabs_MEaSUREs(i,j)=NaN;
+        end
+    end
+end
+
+%% load the mesh
+
+mesh_path_first= [ufe_folder_path, '/main_output_ANT_00001.nc']; %initial state
+
+% read_mesh_from_file + CL, GL and CF
+mesh_first=read_mesh_from_file(mesh_path_first);
+
+time_slice_init=1 ; % first time
+time_slice1=ncread(mesh_path_first,'time'); % load the time of the mesh
+
+CL=ncread(mesh_path_first,'coastline',[1,1,1], [size(mesh_first.E,1),2,time_slice_init]);
+GL=ncread(mesh_path_first,'grounding_line',[1,1,1], [size(mesh_first.E,1),2,time_slice_init]);
+CF=ncread(mesh_path_first,'calving_front',[1,1,1], [size(mesh_first.E,1),2,time_slice_init]);
+IM=ncread(mesh_path_first,'ice_margin',[1,1,1], [size(mesh_first.E,1),2,time_slice_init]);
+%GIC=ncread(mesh_path_first,'grounded_ice_contour',[1,1,1],[11788,2,time_slice_init]); % not really useful
+
+%add variables of the mesh during the "last" time,
+CL2=ncread(mesh_path_first,'coastline',[1,1,length(time_slice1)], [size(mesh_first.E,1),2,1]);
+GL2=ncread(mesh_path_first,'grounding_line',[1,1,length(time_slice1)], [size(mesh_first.E,1),2,1]);
+CF2=ncread(mesh_path_first,'calving_front',[1,1,length(time_slice1)], [size(mesh_first.E,1),2,1]);
+IM2=ncread(mesh_path_first,'ice_margin',[1,1,length(time_slice1)], [size(mesh_first.E,1),2,1]);
+
+CL3=ncread(mesh_path_first,'coastline',[1,1,length(time_slice1)-10], [size(mesh_first.E,1),2,1]);
+GL3=ncread(mesh_path_first,'grounding_line',[1,1,length(time_slice1)-10], [size(mesh_first.E,1),2,1]);
+CF3=ncread(mesh_path_first,'calving_front',[1,1,length(time_slice1)-10], [size(mesh_first.E,1),2,1]);
+IM3=ncread(mesh_path_first,'ice_margin',[1,1,length(time_slice1)-10], [size(mesh_first.E,1),2,1]);
+
+
+if allow_mesh_update
+    % path to the new mesh, for now just changing the number here
+    mesh_path_update = [ufe_folder_path, '/main_output_ANT_0000',number_mesh,'.nc']; 
+    mesh_updated=read_mesh_from_file(mesh_path_update);
+    time_slice2=ncread(mesh_path_update,'time');
+    CL_mesh2=ncread(mesh_path_update,'coastline',[1,1,1], [11788,2,length(time_slice2)]);
+    GL_mesh2=ncread(mesh_path_update,'grounding_line',[1,1,1], [11788,2,length(time_slice2)]);
+    CF_mesh2=ncread(mesh_path_update,'calving_front',[1,1,1], [11788,2,length(time_slice2)]);
+end
+if allow_plot_mesh
+    plot_mesh(mesh_first);
+    hold on
+    plot(CF(:,1),CF(:,2),'LineWidth',2,'Color','red');
+    plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
+    plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','green');
+    hold off
+    if allow_save_plots
+        print([path_save,output_folder,'_mesh_1'],'-dpng','-r300')
+    end
+    if allow_mesh_update
+        plot_mesh(mesh_updated);
+        hold on
+        plot(CF_mesh2(:,1),CF_mesh2(:,2),'LineWidth',2,'Color','red');
+        plot(CL_mesh2(:,1),CL_mesh2(:,2),'LineWidth',2,'Color','blue');
+        plot(GL_mesh2(:,1),GL_mesh2(:,2),'LineWidth',2,'Color','green');
+        hold off
+        if allow_save_plots
+            print([path_save,output_folder,'_mesh_',number_mesh],'-dpng','-r300')
+        end
+    else
+        plot_mesh(mesh_first);
+        hold on
+        plot(CF2(:,1),CF2(:,2),'LineWidth',2,'Color','red');
+        plot(CL2(:,1),CL2(:,2),'LineWidth',2,'Color','blue');
+        plot(GL2(:,1),GL2(:,2),'LineWidth',2,'Color','green');
+        hold off
+    end    
+end
+%% add plots with Voronois cells
+mesh_first.SMB            = ncread( mesh_path_first,'SMB');
+mesh_first.Hi            = ncread( mesh_path_first,'Hi');
+mesh_first.T2m            = ncread( mesh_path_first,'T2m');
+mesh_first.Precip            = ncread( mesh_path_first,'Precip');
+mesh_first.uabs              = ncread( mesh_path_first,'uabs_surf');
+mesh_first.BMB               = ncread( mesh_path_first,'BMB');
+[Hi_fix_mesh, maskHi0_mesh]= Hi0_to_NaN_mesh(mesh_first.Hi);
+mesh_first.mask = ncread( mesh_path_first, 'mask');
+
+if allow_mesh_update
+    % path to the new mesh, for now just changing the number here
+    mesh_path_update = [ufe_folder_path, '/main_output_ANT_0000',number_mesh,'.nc']; 
+    mesh_updated=read_mesh_from_file(mesh_path_update);
+    time_slice2=ncread(mesh_path_update,'time');
+    CL_mesh2=ncread(mesh_path_update,'coastline',[1,1,1], [11788,2,length(time_slice2)]);
+    GL_mesh2=ncread(mesh_path_update,'grounding_line',[1,1,1], [11788,2,length(time_slice2)]);
+    CF_mesh2=ncread(mesh_path_update,'calving_front',[1,1,1], [11788,2,length(time_slice2)]);
+    IM_mesh2=ncread(mesh_path_update,'ice_margin',[1,1,1], [11788,2,length(time_slice2)]);
+    mesh_updated.SMB    = ncread(mesh_path_update, 'SMB');
+    mesh_updated.Hi     = ncread(mesh_path_update, 'Hi');
+    mesh_updated.T2m    = ncread(mesh_path_update, 'T2m');
+    mesh_updated.Precip = ncread(mesh_path_update, 'Precip');
+    mesh_updated.uabs   = ncread(mesh_path_update,'uabs_surf');
+    mesh_updated.BMB    = ncread(mesh_path_update, 'BMB');
+    [Hi_fix_mesh_updated, maskHi0_mesh_updated]= Hi0_to_NaN_mesh(mesh_updated.Hi);
+end
+% polygon for catchments
+ice_boundaries=shaperead('/Users/frre9931/Documents/PhD/MEaSUREs/IceBoundaries_Antarctica_v02.shp');
+% plots
+% ice thickness
+if allow_plot_mesh
+    plot_mesh_data_a_RLIS(mesh_first,mesh_first.Hi(:,1).*maskHi0_mesh(:,1));
+    clim([0 4000]);
+    hold on
+    %patch('vertices',V,'faces',Tri,'facecolor','none','edgecolor','r','linewidth',3,'marker','o');
+    %plot(CF(:,1),CF(:,2),'LineWidth',2,'Color','red');
+    %plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
+    plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','red');
+    plot(IM(:,1),IM(:,2),'LineWidth',2,'Color','black');
+    t=title(output_folder);
+    t.Units='normalized';
+    %plot(ice_boundaries(5).X,ice_boundaries(5).Y,'LineWidth',2)
+    if allow_save_plots
+        print([path_save,output_folder,'_mesh_1_Hi_t0'],'-dpng','-r300')
+    end
+    if allow_mesh_update
+        plot_mesh_data_a_RLIS(mesh_updated,mesh_updated.Hi(:,length(time_slice2)).*maskHi0_mesh_updated(:,length(time_slice2)));
+        clim([0 4000]);
+        hold on
+        plot(IM(:,1),IM(:,2),'LineWidth',2,'Color','black');
+        plot(GL_mesh2(:,1),GL_mesh2(:,2),'LineWidth',2,'Color','red');
+        t=title(output_folder);
+        t.Units='normalized';
+    else
+        plot_mesh_data_a_RLIS(mesh_first,mesh_first.Hi(:,end).*maskHi0_mesh(:,end));
+        clim([0 4000]);
+        hold on
+        %plot(CF(:,1),CF(:,2),'LineWidth',2,'Color','red');
+        %plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
+        plot(GL2(:,1),GL2(:,2),'LineWidth',2,'Color','red');
+        plot(IM2(:,1),IM2(:,2),'LineWidth',2,'Color','black');
+        t=title(output_folder);
+        t.Units='normalized';
+        if allow_save_plots
+            print([path_save,output_folder,'_mesh_1_Hi_tf'],'-dpng','-r300')
+        end
+    end
+end
+% ====================
+%  plot for velocities
+% ====================
+if allow_plot_mesh
+    plot_mesh_data(mesh_first,log(mesh_first.uabs(:,1)));
+    hold on
+    plot(CF(:,1),CF(:,2),'LineWidth',2,'Color','red');
+    plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
+    plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','green');
+    set(gca,'ColorScale','log')
+    clim([10^-1 10^1]);
+    if allow_save_plots
+        %print([path_save,output_folder,'_mesh_1_uabs_t0'],'-dpng','-r300')
+    end
+    if allow_mesh_update
+        plot_mesh_data(mesh_updated,log(mesh_updated.uabs(:,length(time_slice2))));
+        hold on
+        plot(IM_mesh2(:,1),IM_mesh2(:,2),'LineWidth',2,'Color','black');
+        plot(GL_mesh2(:,1),GL_mesh2(:,2),'LineWidth',2,'Color','red');
+        set(gca,'ColorScale','log')
+        clim([10^-1 10^1]);
+    else
+        plot_mesh_data(mesh_first,log(mesh_first.uabs(:,end)));
+        hold on
+        plot(GL2(:,1),GL2(:,2),'LineWidth',2,'Color','red');
+        plot(IM2(:,1),IM2(:,2),'LineWidth',2,'Color','black');
+        set(gca,'ColorScale','log')
+        clim([10^-1 10^1]);
+        if allow_save_plots
+            print([path_save,output_folder,'_mesh_1_uabs_tf'],'-dpng','-r300')
+        end
+    end
+end
+%========================
+% plot for BMB
+% =======================
+if allow_plot_mesh
+    plot_mesh_data_a_RLIS(mesh_first,mesh_first.BMB(:,1));
+    hold on
+    plot(IM(:,1),IM(:,2),'LineWidth',2,'Color','black');
+    plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','black');
+    cptcmap('GMT_polar','flip',true,'ncol',100);
+    clim([-2 2]);
+    t=title(output_folder);
+    t.Units='normalized';
+    if allow_save_plots
+        print([path_save,output_folder,'_mesh_1_BMB_t0'],'-dpng','-r300')
+    end
+    if allow_mesh_update
+        plot_mesh_data_a_RLIS(mesh_updated,mesh_updated.BMB(:,length(time_slice2)));
+        hold on
+        plot(IM_mesh2(:,1),IM_mesh2(:,2),'LineWidth',2,'Color','black');
+        plot(GL_mesh2(:,1),GL_mesh2(:,2),'LineWidth',2,'Color','red');
+        cptcmap('GMT_polar','flip',true,'ncol',100);
+        clim([-2 2]);
+        if allow_save_plots
+          print([path_save,output_folder,'_mesh_2_BMB_tf'],'-dpng','-r300')
+        end
+    else
+        plot_mesh_data_a_RLIS(mesh_first,mesh_first.BMB(:,end-10));
+        hold on
+        plot(GL2(:,1),GL2(:,2),'LineWidth',2,'Color','black');
+        plot(IM2(:,1),IM2(:,2),'LineWidth',2,'Color','black');
+        plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','green','linestyle', ...
+            '--');
+        plot(IM(:,1),IM(:,2),'LineWidth',2,'Color','red','LineStyle','--');
+        cptcmap('GMT_polar','flip',true,'ncol',100);
+        clim([-2 2]);
+        t=title(output_folder);
+        t.Units='normalized';
+        if allow_save_plots
+            print([path_save,output_folder,'_mesh_1_BMB_tf'],'-dpng','-r300')
+        end
+    end
+end
