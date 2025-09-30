@@ -2,13 +2,13 @@
 clear all; clc;
 
 %========= PATH TO OUTPUT UFEMISM DIRECTORY ==========
-output_folder = 'results_ant_PD_inversion_dHdt_init_R-LISonly_g20_relax1';
+output_folder = 'results_ant_PD_control_dTocn';
 %ufe_folder_path=['/Users/frre9931/Desktop/UFEMISM2.0_main/UFEMISM2.0/', output_folder];
-%ufe_folder_path=['/Users/frre9931/Desktop/UFEMISM2.0_porting/', output_folder];
-ufe_folder_path=['/Users/frre9931/Desktop/tetralith_results/', output_folder];
+ufe_folder_path=['/Users/frre9931/Desktop/UFEMISM2.0_porting/', output_folder];
+%ufe_folder_path=['/Users/frre9931/Desktop/tetralith_results/', output_folder];
 allow_plot_mesh = true; % if we want to plot the mesh
 allow_save_plots = false;
-path_save = '/Users/frre9931/Documents/PhD/ANT_UFEMISM/plots_ant/Riiser-Larsen';
+path_save = '/Users/frre9931/Documents/PhD/ANT_UFEMISM/plots_ant/Riiser-Larsen/';
 allow_mesh_update = false; % if remeshing is allowed in simulation
 % number pointing the file with updated mesh
 number_mesh ='2'; % i.e. 2 for main_output_ANT_00002.nc
@@ -84,7 +84,7 @@ if allow_plot_mesh
     plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','green');
     hold off
     if allow_save_plots
-        print([path_save,output_folder,'_mesh_1'],'-dpng','-r300')
+        %print([path_save,output_folder,'_mesh_1'],'-dpng','-r300')
     end
     if allow_mesh_update
         plot_mesh(mesh_updated);
@@ -94,7 +94,7 @@ if allow_plot_mesh
         plot(GL_mesh2(:,1),GL_mesh2(:,2),'LineWidth',2,'Color','green');
         hold off
         if allow_save_plots
-            print([path_save,output_folder,'_mesh_',number_mesh],'-dpng','-r300')
+            %print([path_save,output_folder,'_mesh_',number_mesh],'-dpng','-r300')
         end
     else
         plot_mesh(mesh_first);
@@ -132,6 +132,8 @@ if allow_mesh_update
     mesh_updated.BMB    = ncread(mesh_path_update, 'BMB');
     [Hi_fix_mesh_updated, maskHi0_mesh_updated]= Hi0_to_NaN_mesh(mesh_updated.Hi);
 end
+% calculate Hi differences
+mesh_first.Hi_diff=(mesh_first.Hi(:,end))-(mesh_first.Hi(:,1));
 % polygon for catchments
 ice_boundaries=shaperead('/Users/frre9931/Documents/PhD/MEaSUREs/IceBoundaries_Antarctica_v02.shp');
 % plots
@@ -145,7 +147,7 @@ if allow_plot_mesh
     %plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
     plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','red');
     plot(IM(:,1),IM(:,2),'LineWidth',2,'Color','black');
-    t=title(output_folder);
+    t=title([output_folder,' t0'],'Interpreter','none');
     t.Units='normalized';
     %plot(ice_boundaries(5).X,ice_boundaries(5).Y,'LineWidth',2)
     if allow_save_plots
@@ -167,7 +169,7 @@ if allow_plot_mesh
         %plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
         plot(GL2(:,1),GL2(:,2),'LineWidth',2,'Color','red');
         plot(IM2(:,1),IM2(:,2),'LineWidth',2,'Color','black');
-        t=title(output_folder);
+        t=title([output_folder,' tf'],'Interpreter','none');
         t.Units='normalized';
         if allow_save_plots
             print([path_save,output_folder,'_mesh_1_Hi_tf'],'-dpng','-r300')
@@ -178,13 +180,13 @@ end
 %  plot for velocities
 % ====================
 if allow_plot_mesh
-    plot_mesh_data(mesh_first,log(mesh_first.uabs(:,1)));
-    hold on
-    plot(CF(:,1),CF(:,2),'LineWidth',2,'Color','red');
-    plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
-    plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','green');
-    set(gca,'ColorScale','log')
-    clim([10^-1 10^1]);
+    % plot_mesh_data_b_RLIS(mesh_first,log(mesh_first.uabs(:,1)));
+    % hold on
+    % plot(CF(:,1),CF(:,2),'LineWidth',2,'Color','red');
+    % plot(CL(:,1),CL(:,2),'LineWidth',2,'Color','blue');
+    % plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','green');
+    % set(gca,'ColorScale','log')
+    % clim([10^-1 10^1]);
     if allow_save_plots
         %print([path_save,output_folder,'_mesh_1_uabs_t0'],'-dpng','-r300')
     end
@@ -196,12 +198,22 @@ if allow_plot_mesh
         set(gca,'ColorScale','log')
         clim([10^-1 10^1]);
     else
-        plot_mesh_data(mesh_first,log(mesh_first.uabs(:,end)));
+        %plot_mesh_data_b_RLIS(mesh_first,log(mesh_first.uabs(:,end)));
+        plot_mesh_data_b_RLIS(mesh_first,log10(mesh_first.uabs(:,end)));
         hold on
-        plot(GL2(:,1),GL2(:,2),'LineWidth',2,'Color','red');
+        plot(GL2(:,1),GL2(:,2),'LineWidth',2,'Color','black');
         plot(IM2(:,1),IM2(:,2),'LineWidth',2,'Color','black');
-        set(gca,'ColorScale','log')
-        clim([10^-1 10^1]);
+        cptcmap('/Users/frre9931/Documents/PhD/ScientificColourMaps8/devon/devon.cpt'...
+            ,'flip',false,'ncol',100);
+        clim([log10(1) log10(2000)])
+        cb = colorbar;
+        cb.Ticks = log10([1 10 50 100 500 1000 2000]); % positions in log10 space
+        cb.TickLabels = {'1','10','50','100','500','1000','2000'}; % readable labels
+        cb.Label.String = 'Velocity (m/yr)';
+        t=title([output_folder,' tf'],'Interpreter','none');
+        t.Units='normalized';
+        %set(gca,'ColorScale','log')
+        %clim([10^0 10^3]);
         if allow_save_plots
             print([path_save,output_folder,'_mesh_1_uabs_tf'],'-dpng','-r300')
         end
@@ -217,7 +229,7 @@ if allow_plot_mesh
     plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','black');
     cptcmap('GMT_polar','flip',true,'ncol',100);
     clim([-2 2]);
-    t=title(output_folder);
+    t=title([output_folder,' t0'],'Interpreter','none');
     t.Units='normalized';
     if allow_save_plots
         print([path_save,output_folder,'_mesh_1_BMB_t0'],'-dpng','-r300')
@@ -239,13 +251,31 @@ if allow_plot_mesh
         plot(IM2(:,1),IM2(:,2),'LineWidth',2,'Color','black');
         plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','green','linestyle', ...
             '--');
-        plot(IM(:,1),IM(:,2),'LineWidth',2,'Color','red','LineStyle','--');
+        %plot(IM(:,1),IM(:,2),'LineWidth',2,'Color','red','LineStyle','--');
         cptcmap('GMT_polar','flip',true,'ncol',100);
         clim([-2 2]);
-        t=title(output_folder);
+        t=title([output_folder,' tf'],'Interpreter','none');
         t.Units='normalized';
         if allow_save_plots
             print([path_save,output_folder,'_mesh_1_BMB_tf'],'-dpng','-r300')
         end
+    end
+end
+% ========== 
+% == plot for Hi_tf - Hi_t0
+% ==========
+% plots
+% ice thickness
+if allow_plot_mesh
+    plot_mesh_data_a_RLIS(mesh_first,mesh_first.Hi_diff(:,1));
+    hold on
+    cptcmap('GMT_polar','flip',false,'ncol',100);
+    clim([-800 800]);
+    plot(GL2(:,1),GL2(:,2),'LineWidth',2,'Color','black');
+    plot(IM2(:,1),IM2(:,2),'LineWidth',2,'Color','black');
+    t=title([output_folder,' Hi(tf) - Hi(t0)'],'Interpreter','none');
+    t.Units='normalized';
+    if allow_save_plots
+        print([path_save,output_folder,'_mesh_1_Hi_diff'],'-dpng','-r300')
     end
 end

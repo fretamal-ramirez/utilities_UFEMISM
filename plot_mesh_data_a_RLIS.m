@@ -1,6 +1,6 @@
 function H = plot_mesh_data_a_RLIS( mesh, d)
 
-% Plot range for Antarctic Peninsula
+% Plot range for Riiser-Larsen
 xmid = (-878893.0+131107.0)/2;
 ymid = (1137850.0+2217850.0)/2;
 wx    = 600e3;
