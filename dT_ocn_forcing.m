@@ -1,16 +1,16 @@
 %create a transient dT_ocean forcing to use as input in UFEMISM2.0
 
 % let's start from 1990 to 2020
-time = 1990:2020;
+time = 1980:2100;
 % dT to perturb the ocean field
-dT = 1; 
+dT = 2; 
 % create a vector with the values
 dT_constant = ones(size(time)).*dT;
 dT_ramp = linspace(0,dT,length(time));
 
 % possible names for variable in file 'dT||dT_ocean||dTo'
 % filename with path
-filename = '/Users/frre9931/Documents/PhD/ANT_UFEMISM/ocean_forcings/dT_ramp_0_to_1.nc';
+filename = '/Users/frre9931/Documents/PhD/ANT_UFEMISM/ocean_forcings/dT_ramp_0_to_2.nc';
 
 % save as netcdf file
 nccreate(filename, 'time', 'Dimension', {'time', length(time)});
@@ -22,4 +22,4 @@ ncwrite(filename, 'time', time);
 
 % Add metadata
 ncwriteatt(filename,'time','units','years');
-ncwriteatt(filename,'dT_ocean','units','K degrees');
+ncwriteatt(filename,'dT_ocean','units','degrees');

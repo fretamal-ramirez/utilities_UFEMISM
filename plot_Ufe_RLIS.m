@@ -2,7 +2,7 @@
 clear all; clc;
 
 %========= PATH TO OUTPUT UFEMISM DIRECTORY ==========
-output_folder = 'results_ant_PD_control_dTocn';
+output_folder = 'results_ant_PD_retreat_mask_2500';
 %ufe_folder_path=['/Users/frre9931/Desktop/UFEMISM2.0_main/UFEMISM2.0/', output_folder];
 ufe_folder_path=['/Users/frre9931/Desktop/UFEMISM2.0_porting/', output_folder];
 %ufe_folder_path=['/Users/frre9931/Desktop/tetralith_results/', output_folder];
@@ -61,10 +61,10 @@ GL2=ncread(mesh_path_first,'grounding_line',[1,1,length(time_slice1)], [size(mes
 CF2=ncread(mesh_path_first,'calving_front',[1,1,length(time_slice1)], [size(mesh_first.E,1),2,1]);
 IM2=ncread(mesh_path_first,'ice_margin',[1,1,length(time_slice1)], [size(mesh_first.E,1),2,1]);
 
-CL3=ncread(mesh_path_first,'coastline',[1,1,length(time_slice1)-10], [size(mesh_first.E,1),2,1]);
-GL3=ncread(mesh_path_first,'grounding_line',[1,1,length(time_slice1)-10], [size(mesh_first.E,1),2,1]);
-CF3=ncread(mesh_path_first,'calving_front',[1,1,length(time_slice1)-10], [size(mesh_first.E,1),2,1]);
-IM3=ncread(mesh_path_first,'ice_margin',[1,1,length(time_slice1)-10], [size(mesh_first.E,1),2,1]);
+% CL3=ncread(mesh_path_first,'coastline',[1,1,length(time_slice1)-10], [size(mesh_first.E,1),2,1]);
+% GL3=ncread(mesh_path_first,'grounding_line',[1,1,length(time_slice1)-10], [size(mesh_first.E,1),2,1]);
+% CF3=ncread(mesh_path_first,'calving_front',[1,1,length(time_slice1)-10], [size(mesh_first.E,1),2,1]);
+% IM3=ncread(mesh_path_first,'ice_margin',[1,1,length(time_slice1)-10], [size(mesh_first.E,1),2,1]);
 
 
 if allow_mesh_update
@@ -245,12 +245,12 @@ if allow_plot_mesh
           print([path_save,output_folder,'_mesh_2_BMB_tf'],'-dpng','-r300')
         end
     else
-        plot_mesh_data_a_RLIS(mesh_first,mesh_first.BMB(:,end-10));
+        plot_mesh_data_a_RLIS(mesh_first,mesh_first.BMB(:,end));
         hold on
         plot(GL2(:,1),GL2(:,2),'LineWidth',2,'Color','black');
         plot(IM2(:,1),IM2(:,2),'LineWidth',2,'Color','black');
         plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','green','linestyle', ...
-            '--');
+            '-.');
         %plot(IM(:,1),IM(:,2),'LineWidth',2,'Color','red','LineStyle','--');
         cptcmap('GMT_polar','flip',true,'ncol',100);
         clim([-2 2]);
@@ -264,13 +264,14 @@ end
 % ========== 
 % == plot for Hi_tf - Hi_t0
 % ==========
-% plots
-% ice thickness
 if allow_plot_mesh
     plot_mesh_data_a_RLIS(mesh_first,mesh_first.Hi_diff(:,1));
     hold on
-    cptcmap('GMT_polar','flip',false,'ncol',100);
-    clim([-800 800]);
+    %cptcmap('/Users/frre9931/Documents/PhD/ScientificColourMaps8/bukavu/bukavu.cpt'...
+    %        ,'flip',false,'ncol',100);
+    colorbar;
+    cptcmap('GMT_polar','flip',true,'ncol',100);
+    clim([-250 250]);
     plot(GL2(:,1),GL2(:,2),'LineWidth',2,'Color','black');
     plot(IM2(:,1),IM2(:,2),'LineWidth',2,'Color','black');
     t=title([output_folder,' Hi(tf) - Hi(t0)'],'Interpreter','none');

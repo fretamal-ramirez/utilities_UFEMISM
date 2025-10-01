@@ -2,7 +2,7 @@
 clear all; clc;
 
 %========= PATH TO OUTPUT UFEMISM DIRECTORY ==========
-output_folder = 'results_ant_PD_inversion_dHdt_init_R-LIS_gamma10_HR';
+output_folder = 'results_ant_PD_inversion_dHdt_init_ROI_gamma20';
 %ufe_folder_path=['/Users/frre9931/Desktop/UFEMISM2.0_main/UFEMISM2.0/', output_folder];
 %ufe_folder_path=['/Users/frre9931/Desktop/UFEMISM2.0_porting/', output_folder];
 ufe_folder_path=['/Users/frre9931/Desktop/tetralith_results/', output_folder];
@@ -268,12 +268,12 @@ if allow_plot_mesh
         set(gca,'ColorScale','log')
         clim([10^-1 10^1]);
     else
-        plot_mesh_data(mesh_first,log(mesh_first.uabs(:,end)));
+        plot_mesh_data(mesh_first,log10(mesh_first.uabs(:,end)));
         hold on
         plot(GL2(:,1),GL2(:,2),'LineWidth',2,'Color','red');
         plot(IM2(:,1),IM2(:,2),'LineWidth',2,'Color','black');
-        set(gca,'ColorScale','log')
-        clim([10^-1 10^1]);
+        %set(gca,'ColorScale','log')
+        clim([log10(1) log10(2000)]);
         if allow_save_plots
             print([path_save,output_folder,'_mesh_1_uabs_tf'],'-dpng','-r300')
         end
@@ -596,7 +596,7 @@ end
 %% create an artifical mask for ice shelf ISMIP6 experiment, just for testing
 % create a mask from grid BMB, basically were it exist BMB put a 1 bcs is
 % an ice shelf
-faketime=[2000:10:2300];
+faketime=[2000:10:2500];
 shelf_mask=ones([size(BMB(:,:,1)) length(faketime)]);
 % I need to stack this with time variable... because the input is expected
 % to have time!
@@ -608,7 +608,7 @@ for k=1:length(faketime)
     mask_ismip6(:,:,k)=mask_ismip6(:,:,1);
 end
 % save netcdf file using x,y from file
-ncid = netcdf.create(['/Users/frre9931/Documents/PhD/ANT_UFEMISM/mask_ismip6_test.nc'],'CLOBBER');
+ncid = netcdf.create(['/Users/frre9931/Documents/PhD/ANT_UFEMISM/mask_ismip6_2500.nc'],'CLOBBER');
 
 % Define dimensions
 % =================
