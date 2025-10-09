@@ -2,10 +2,11 @@
 clear all; clc;
 
 %========= PATH TO OUTPUT UFEMISM DIRECTORY ==========
-output_folder = 'results_ant_PD_retreat_mask_2500';
+output_folder = 'results_ant_PD_inversion_dHdt_init_R-LIS_smooth_Hb_icerises_PMP';
 %ufe_folder_path=['/Users/frre9931/Desktop/UFEMISM2.0_main/UFEMISM2.0/', output_folder];
-ufe_folder_path=['/Users/frre9931/Desktop/UFEMISM2.0_porting/', output_folder];
-%ufe_folder_path=['/Users/frre9931/Desktop/tetralith_results/', output_folder];
+%ufe_folder_path=['/Users/frre9931/Desktop/UFEMISM2.0_porting/', output_folder];
+ufe_folder_path=['/Users/frre9931/Desktop/tetralith_results/', output_folder];
+%ufe_folder_path=['/Volumes/One Touch/results_UFEMISM/tetralith_results/', output_folder];
 allow_plot_mesh = true; % if we want to plot the mesh
 allow_save_plots = false;
 path_save = '/Users/frre9931/Documents/PhD/ANT_UFEMISM/plots_ant/Riiser-Larsen/';
@@ -280,3 +281,17 @@ if allow_plot_mesh
         print([path_save,output_folder,'_mesh_1_Hi_diff'],'-dpng','-r300')
     end
 end
+
+%% different section of the code to plot differences between modelled and observed
+% I will use the data from MEaSUREs and grid output from the ROI
+
+uabs_ufe=ncread([ufe_folder_path, '/main_output_ANT_grid_ROI_RiiserLarsen.nc'],'uabs_surf');
+x_ufe=ncread([ufe_folder_path, '/main_output_ANT_grid_ROI_RiiserLarsen.nc'],'x');
+y_ufe=ncread([ufe_folder_path, '/main_output_ANT_grid_ROI_RiiserLarsen.nc'],'y');
+[xx_measures,yy_measures]=meshgrid(x_MEaSUREs,y_MEaSUREs);
+[xx_ufe,yy_ufe]=meshgrid(x_ufe,y_ufe);
+% interpolate MEaSUREs to same resolution as UFEMISM output
+uabs_measures_intep=interp2(xx_measures,yy_measures,uabs_MEaSUREs',xx_ufe,yy_ufe);
+
+
+
