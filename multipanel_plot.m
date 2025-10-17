@@ -3,9 +3,16 @@ clear all; clc;
 
 % ==== DEFINE OUTPUTS ====
 outputs = { ...
-    'results_ant_PD_smooth_Hb_retreat_mask_NMP', ...
-    'results_ant_PD_smooth_Hb_retreat_mask_FCMP', ...
-    'results_ant_PD_smooth_Hb_retreat_mask_PMP' ...
+    'results_ant_PD_control2500_PMP', ...
+    'results_ant_PD_retreat_mask_PMP', ...
+    'results_ant_PD_retreat_mask_PMP_calving', ...
+    'results_ant_PD_retreat_mask_PMP_calving_code', ...
+};
+titles_name = { ...
+    'PD_control2500_PMP', ...
+    'PD_retreat_mask_PMP', ...
+    'PD_retreat_mask_PMP_calving', ...
+    'PD_retreat_PMP_calving_code', ...
 };
 tile_size = 300; % pixels for each panel
 nCols = numel(outputs);
@@ -27,6 +34,8 @@ path(path,genpath('/Users/frre9931/Desktop/UFEMISM2.0_main/UFEMISM2.0/tools/matl
 %path(path,genpath('/Users/frre9931/Documents/PhD/Antarctic-Mapping-Tools-main'));
 path(path,genpath('/Users/frre9931/Documents/PhD/cptcmap-pkg/cptcmap'));
 
+% ===== Data to complement plots ====
+rock_outcrops=shaperead('/Users/frre9931/Documents/PhD/RiiserLarsen/ADD_RockOutcrops_RLIS.shp');
 fig=figure('Units','pixels','Position',[100 100 fig_width fig_height],'Visible','off');
 tiledlayout(nRows,nCols,"TileSpacing","compact","Padding","compact");
 
@@ -49,6 +58,7 @@ for i = 1:nCols
     % === Grounding & ice margins ===
     nE = size(mesh.E,1);
     nt = length(ncread(filepath,'time'));
+    GL1 = ncread(filepath,'grounding_line',[1,1,1],[nE,2,1]);
     GL2 = ncread(filepath,'grounding_line',[1,1,nt],[nE,2,1]);
     IM2 = ncread(filepath,'ice_margin',[1,1,nt],[nE,2,1]);
 
@@ -62,7 +72,8 @@ for i = 1:nCols
     plot(IM2(:,1),IM2(:,2),'k','LineWidth',0.8);
     cptcmap(colormaps.devon,'flip',false,'ncol',100);
     clim([log10(1) log10(2000)]);
-    title(output_folder,'Interpreter','none');
+    title(titles_name{i},'Interpreter','none');
+    %title(output_folder,'Interpreter','none');
     if i == 1
         ylabel(plot_titles{1},'FontWeight','bold');
     end
@@ -75,6 +86,7 @@ for i = 1:nCols
     hold on;
     plot(GL2(:,1),GL2(:,2),'k','LineWidth',0.8);
     plot(IM2(:,1),IM2(:,2),'k','LineWidth',0.8);
+    plot(GL1(:,1),GL1(:,2),'LineWidth',0.8,'Color','green','linestyle','-.')
     cptcmap('GMT_polar','flip',true,'ncol',100);
     clim([-2 2]);
     if i == 1
@@ -89,6 +101,7 @@ for i = 1:nCols
     hold on;
     plot(GL2(:,1),GL2(:,2),'k','LineWidth',0.8);
     plot(IM2(:,1),IM2(:,2),'k','LineWidth',0.8);
+    plot(rock_outcrops.X,rock_outcrops.Y,'LineWidth',0.8,'color',[0.25, 0.25, 0.25]);
     cptcmap('GMT_polar','flip',true,'ncol',100);
     clim([-250 250]);
     if i == 1
@@ -121,4 +134,4 @@ for r = 1:nRows
     end
 end
 
-print(fig,'multipanel_plot.png','-dpng','-r300');
+print(fig,'/Users/frre9931/Documents/PhD/ANT_UFEMISM/plots_ant/Riiser-Larsen/multipanel/multipanel_plot.png','-dpng','-r300');
