@@ -1,15 +1,21 @@
 %% MULTIPANEL COMPARISON PLOTS (shared colorbars)
+% last plot deltaH is respect to present day geometry
 clear all; clc;
 
 % ==== DEFINE OUTPUTS ====
 outputs = { ...
-    'results_ant_PD_inversion_dHdt_init_R-LIS_gamma20_PMP_roughness_max20',...
-    'results_ant_PD_inversion_dHdt_init_R-LIS_gamma20_PMP_roughness_max20_dHdt',...
+    'results_ant_PD_maxphi_20_ctrl2500_dHdt',...
+    'results_ant_PD_maxphi_20_ctrl2500_SMB_and_phi_50percent_dHdt',...
+    'results_ant_PD_maxphi_20_retreat_mask_code_dHdt',...
+    'results_ant_PD_maxphi_20_retreat_mask_code_SMB_and_phi_50percent_dHdt',...
 };
 titles_name = { ...
-    'inversion_phi_max20', ...
-    'inversion_phi_max20_dHdt', ...
+    'PD_ctrl_dHdt', ...
+    'PD_ctrl_SMB&phi50%_dHdt', ...
+    'PD_retreat_dHdt', ...
+    'PD_retreat_SMB&phi50%_dHdt', ...
 };
+present_day = 'results_ant_PD_inversion_dHdt_init_R-LIS_gamma20_PMP';
 tile_size = 300; % pixels for each panel
 nCols = numel(outputs);
 nRows = 3; % uabs, BMB, Hi_diff
@@ -39,6 +45,10 @@ tiledlayout(nRows,nCols,"TileSpacing","compact","Padding","compact");
 % Preallocate axes for later shared colorbars
 ax_all = gobjects(nRows,nCols);
 
+% read present day conditions, as all the experiments have the same mesh,
+% there is no problem at this point
+PD_Hi = ncread([basepath,present_day, '/main_output_ANT_00001.nc'],'Hi');
+
 for i = 1:nCols
     output_folder = outputs{i};
     filepath = fullfile(basepath, output_folder, 'main_output_ANT_00001.nc');
@@ -51,7 +61,7 @@ for i = 1:nCols
     mesh.mask = ncread(filepath,'mask');
     mesh.Hb   = ncread(filepath, 'Hb');
     [Hi_fix, maskHi0] = Hi0_to_NaN_mesh(mesh.Hi);
-    mesh.Hi_diff = mesh.Hi(:,end) - mesh.Hi(:,1);
+    mesh.Hi_diff = mesh.Hi(:,end) - PD_Hi(:,1);
     mesh.Hb_diff = mesh.Hb(:,end) - mesh.Hb(:,1);
 
     % === Grounding & ice margins ===
@@ -102,7 +112,7 @@ for i = 1:nCols
     plot(IM2(:,1),IM2(:,2),'k','LineWidth',0.8);
     plot(rock_outcrops.X,rock_outcrops.Y,'LineWidth',0.8,'color',[0.25, 0.25, 0.25]);
     cptcmap('GMT_polar','flip',true,'ncol',100);
-    clim([-750 750]);
+    clim([-1000 1000]);
     if i == 1
         ylabel(plot_titles{3},'FontWeight','bold');
     end
@@ -148,4 +158,4 @@ for r = 1:nRows
     end
 end
 
-print(fig,'/Users/frre9931/Documents/PhD/ANT_UFEMISM/plots_ant/Riiser-Larsen/multipanel/multipanel_plot.png','-dpng','-r300');
+print(fig,'/Users/frre9931/Documents/PhD/ANT_UFEMISM/plots_ant/Riiser-Larsen/multipanel/multipanel_plot_PD.png','-dpng','-r300');
