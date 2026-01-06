@@ -1,22 +1,21 @@
 %% MULTIPANEL COMPARISON PLOTS (shared colorbars)
-clear all; clc;
+clear all; close all; clc;
 
 % ==== DEFINE OUTPUTS ====
 outputs = { ...
-    'results_ant_PD_control2500_PMP', ...
-    'results_ant_PD_retreat_mask_PMP', ...
-    'results_ant_PD_retreat_mask_PMP_calving', ...
-    'results_ant_PD_retreat_mask_PMP_calving_code', ...
+    'results_ant_PD_maxphi_20_HR_retreat_SMB_50percent',...
+    'results_ant_PD_maxphi_20_HR_retreat_phi_50percent',...
+    'results_ant_PD_maxphi_20_HR_retreat_SMB_and_phi_50percent',...
 };
 titles_name = { ...
-    'PD_control2500_PMP', ...
-    'PD_retreat_mask_PMP', ...
-    'PD_retreat_mask_PMP_calving', ...
-    'PD_retreat_PMP_calving_code', ...
+    %'max ϕ = 20', ...
+    'retreat with 50% SMB', ...
+    'retreat with 50% ϕ', ...
+    'retreat with 50% SMB & ϕ',...
 };
 tile_size = 300; % pixels for each panel
 nCols = numel(outputs);
-nRows = 3; % uabs, BMB, Hi_diff
+nRows = 2; % uabs, BMB, Hi_diff
 
 fig_width  = tile_size * nCols;
 fig_height = tile_size * nRows;
@@ -25,7 +24,11 @@ fig_height = tile_size * nRows;
 %basepath = '/Volumes/One Touch/results_UFEMISM/tetralith_results/';
 basepath = '/Users/frre9931/Desktop/tetralith_results/';
 colormaps.devon = '/Users/frre9931/Documents/PhD/ScientificColourMaps8/devon/devon.cpt';
-plot_titles = {'Velocity (m/yr)', 'Basal melt rate (m/yr)', 'ΔIce thickness (m)'};
+%plot_titles = {'Velocity (m/yr)', 'Basal melt rate (m/yr)', 'ΔIce thickness (m)'};
+plot_titles = {'Northings (m)', 'Northings (m)'};
+letters_for_plots = {'(a)','(b)','(c)','(d)','(e)','(f)','(g)','(h)'}; % 8 plot max for now
+%plot_titles = {'Velocity (m/yr)', 'Basal melt rate (m/yr)', 'ΔIce thickness (m)', 'Till friction angle (°)'};
+%plot_titles = {'Velocity (m/yr)', 'Till friction angle (°)', 'ΔIce thickness (m)', 'Final ice thickness (m)'};
 
 % ==== Add extra functions ====
 % add functions from UFEMISM library
@@ -52,8 +55,11 @@ for i = 1:nCols
     mesh.BMB  = ncread(filepath,'BMB');
     mesh.Hi   = ncread(filepath,'Hi');
     mesh.mask = ncread(filepath,'mask');
+    mesh.Hb   = ncread(filepath, 'Hb');
+    mesh.tfa  = ncread(filepath, 'till_friction_angle');
     [Hi_fix, maskHi0] = Hi0_to_NaN_mesh(mesh.Hi);
     mesh.Hi_diff = mesh.Hi(:,end) - mesh.Hi(:,1);
+    mesh.Hb_diff = mesh.Hb(:,end) - mesh.Hb(:,1);
 
     % === Grounding & ice margins ===
     nE = size(mesh.E,1);
@@ -73,40 +79,113 @@ for i = 1:nCols
     cptcmap(colormaps.devon,'flip',false,'ncol',100);
     clim([log10(1) log10(2000)]);
     title(titles_name{i},'Interpreter','none');
+    text(-7.8e5,2.13e6,letters_for_plots{i},'FontWeight','bold','FontSize',13);
     %title(output_folder,'Interpreter','none');
     if i == 1
-        ylabel(plot_titles{1},'FontWeight','bold');
+        ylabel(plot_titles{1});
     end
 
-    % ===================
-    % --- 2. BMB ROW ---
-    % ===================
+    % % ===================
+    % % --- 2. PHI ROW ---
+    % % ===================
+    % ax_all(2,i) = nexttile(nCols + i); % row 2
+    % plot_mesh_data_a_RLIS(mesh, mesh.tfa(:,end), ax_all(2,i));
+    % hold on;
+    % plot(GL2(:,1),GL2(:,2),'k','LineWidth',0.8);
+    % plot(IM2(:,1),IM2(:,2),'k','LineWidth',0.8);
+    % clim([0 30]);
+    % if i == 1
+    %     ylabel(plot_titles{2},'FontWeight','bold');
+    % end
+
+    % ===========================
+    % --- 2. HI DIFFERENCE ROW ---
+    % ===========================
     ax_all(2,i) = nexttile(nCols + i); % row 2
-    plot_mesh_data_a_RLIS(mesh, mesh.BMB(:,end), ax_all(2,i));
-    hold on;
-    plot(GL2(:,1),GL2(:,2),'k','LineWidth',0.8);
-    plot(IM2(:,1),IM2(:,2),'k','LineWidth',0.8);
-    plot(GL1(:,1),GL1(:,2),'LineWidth',0.8,'Color','green','linestyle','-.')
-    cptcmap('GMT_polar','flip',true,'ncol',100);
-    clim([-2 2]);
-    if i == 1
-        ylabel(plot_titles{2},'FontWeight','bold');
-    end
-
-    % ===========================
-    % --- 3. HI DIFFERENCE ROW ---
-    % ===========================
-    ax_all(3,i) = nexttile(2*nCols + i); % row 3
-    plot_mesh_data_a_RLIS(mesh, mesh.Hi_diff(:,1), ax_all(3,i));
+    plot_mesh_data_a_RLIS(mesh, mesh.Hi_diff(:,1), ax_all(2,i));
     hold on;
     plot(GL2(:,1),GL2(:,2),'k','LineWidth',0.8);
     plot(IM2(:,1),IM2(:,2),'k','LineWidth',0.8);
     plot(rock_outcrops.X,rock_outcrops.Y,'LineWidth',0.8,'color',[0.25, 0.25, 0.25]);
+    plot(GL1(:,1),GL1(:,2),'LineWidth',1.0,'Color','green','linestyle','-.')
     cptcmap('GMT_polar','flip',true,'ncol',100);
-    clim([-250 250]);
+    clim([-1000 1000]);
+    xlabel('Eastings (m)')
+    text(-7.8e5,2.13e6,letters_for_plots{i+nCols},'FontWeight','bold','FontSize',13);
     if i == 1
-        ylabel(plot_titles{3},'FontWeight','bold');
+        ylabel(plot_titles{2});
     end
+
+    % % ===================
+    % % --- 2. BMB ROW ---
+    % % ===================
+    % ax_all(2,i) = nexttile(nCols + i); % row 2
+    % plot_mesh_data_a_RLIS(mesh, mesh.BMB(:,end), ax_all(2,i));
+    % hold on;
+    % plot(GL2(:,1),GL2(:,2),'k','LineWidth',0.8);
+    % plot(IM2(:,1),IM2(:,2),'k','LineWidth',0.8);
+    % plot(GL1(:,1),GL1(:,2),'LineWidth',0.8,'Color','green','linestyle','-.')
+    % cptcmap('GMT_polar','flip',true,'ncol',100);
+    % clim([-2 2]);
+    % if i == 1
+    %     ylabel(plot_titles{2},'FontWeight','bold');
+    % end
+
+    % % ===========================
+    % % --- 3. HI DIFFERENCE ROW ---
+    % % ===========================
+    % ax_all(3,i) = nexttile(2*nCols + i); % row 3
+    % plot_mesh_data_a_RLIS(mesh, mesh.Hi_diff(:,1), ax_all(3,i));
+    % hold on;
+    % plot(GL2(:,1),GL2(:,2),'k','LineWidth',0.8);
+    % plot(IM2(:,1),IM2(:,2),'k','LineWidth',0.8);
+    % plot(rock_outcrops.X,rock_outcrops.Y,'LineWidth',0.8,'color',[0.25, 0.25, 0.25]);
+    % cptcmap('GMT_polar','flip',true,'ncol',100);
+    % clim([-1000 1000]);
+    % if i == 1
+    %     ylabel(plot_titles{3},'FontWeight','bold');
+    % end
+
+    % % ===========================
+    % % --- 4. Hb DIFFERENCE ROW ---
+    % % ===========================
+    % ax_all(4,i) = nexttile(3*nCols + i); % row 3
+    % plot_mesh_data_a_RLIS(mesh, mesh.Hb_diff(:,1), ax_all(4,i));
+    % hold on;
+    % plot(IM2(:,1),IM2(:,2),'k','LineWidth',0.8);
+    % %cptcmap('GMT_polar','flip',true,'ncol',100);
+    % clim([0 100]);
+    % if i == 1
+    %     ylabel(plot_titles{4},'FontWeight','bold');
+    % end
+
+    % % ===========================
+    % % --- 4. FINAL Hi row ---
+    % % ===========================
+    % ax_all(4,i) = nexttile(3*nCols + i); % row 3
+    % plot_mesh_data_a_RLIS(mesh, mesh.Hi(:,end).*maskHi0(:,end), ax_all(4,i));
+    % hold on;
+    % plot(IM2(:,1),IM2(:,2),'k','LineWidth',0.8);
+    % plot(GL2(:,1),GL2(:,2),'k','LineWidth',0.8);
+    % %cptcmap('GMT_polar','flip',true,'ncol',100);
+    % clim([0 3000]);
+    % if i == 1
+    %     ylabel(plot_titles{4},'FontWeight','bold');
+    % end
+
+    % % ===================
+    % % --- 4. PHI ROW ---
+    % % ===================
+    % ax_all(4,i) = nexttile(3*nCols + i); % row 2
+    % plot_mesh_data_a_RLIS(mesh, mesh.tfa(:,end), ax_all(4,i));
+    % hold on;
+    % plot(GL2(:,1),GL2(:,2),'k','LineWidth',0.8);
+    % plot(IM2(:,1),IM2(:,2),'k','LineWidth',0.8);
+    % clim([0 30]);
+    % if i == 1
+    %     ylabel(plot_titles{4},'FontWeight','bold');
+    % end
+
 end
 
 % ===============================
@@ -126,11 +205,18 @@ for r = 1:nRows
         case 1
             cb.Ticks = log10([1 10 50 100 500 1000 2000]);
             cb.TickLabels = {'1','10','50','100','500','1000','2000'};
-            cb.Label.String = 'Velocity (m/yr)';
+            cb.Label.String = 'Surface velocity (m/yr)';
+            cb.Label.FontSize = 12;
         case 2
-            cb.Label.String = 'BMB (m/yr)';
+            %cb.Label.String = 'BMB (m/yr)';
+            cb.Label.String = 'Ice thickness difference (m)';
+            cb.Label.FontSize = 12;
+            %cb.Label.String = 'Till friction angle (°)';
         case 3
             cb.Label.String = 'ΔHi (m)';
+         case 4
+            %cb.Label.String = 'Hi (m)';
+            cb.Label.String = 'Till friction angle (°)';
     end
 end
 

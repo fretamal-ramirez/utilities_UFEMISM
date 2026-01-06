@@ -11,7 +11,8 @@ wy = 800e3;
 
 xmin = xmid - wx; xmax = xmid + wx;
 ymin = ymid - wy; ymax = ymid + wy;
-
+xmin = -878893.0; xmax = 131107.0;
+ymin = 1137850.0; ymax = 2217850.0;
 edgecolor = 'none';
 
 % === Check if an axes handle was provided ===
@@ -33,7 +34,7 @@ else
     H.Fig = ancestor(ax,'figure');
     H.Ax = ax;
     set(H.Ax,'XLim',[xmin,xmax],'YLim',[ymin,ymax],...
-        'XGrid','on','YGrid','on');
+        'XGrid','on','YGrid','on','Layer','top');
 end
 
 % === Plot patch ===

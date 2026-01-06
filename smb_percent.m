@@ -5,9 +5,10 @@ smb_input=ncread('/Users/frre9931/Desktop/UFEMISM2.0_main/UFEMISM2.0/data/RACMO/
 x=ncread('/Users/frre9931/Desktop/UFEMISM2.0_main/UFEMISM2.0/data/RACMO/Antarctica/RACMO_SMB_1979_2016.nc','x');
 y=ncread('/Users/frre9931/Desktop/UFEMISM2.0_main/UFEMISM2.0/data/RACMO/Antarctica/RACMO_SMB_1979_2016.nc','y');
 
-percent=25;
+% how much it will be decreased in percentage
+percent=40;
 smb_decreased=ones(size(smb_input)); %allocate variable
-smb_decreased=smb_input*(percent/100);
+smb_decreased=smb_input*((100-percent)/100);
 
 %% save new data set to force UFEMISM
 
@@ -62,20 +63,22 @@ netcdf.close(ncid);
 % this will have to be implemented in the mesh file rather than grid
 % version
 clear all
-pathtofile='/Users/frre9931/Desktop/tetralith_results/results_ant_PD_inversion_dHdt_init_R-LIS_gamma20_PMP_roughness_max20';
+pathtofile='/Users/frre9931/Desktop/tetralith_results/results_ant_PD_inversion_dHdt_init_R-LIS_gamma99_PMP_roughness_max30_SHR';
 % add functions from UFEMISM library
 path(path,genpath('/Users/frre9931/Desktop/UFEMISM2.0_main/UFEMISM2.0/tools/matlab'));
 
 mesh1 = read_mesh_from_file([pathtofile,'/main_output_ANT_00001.nc']);
 till_angle=ncread([pathtofile,'/main_output_ANT_00001.nc'],'till_friction_angle');
+hi=ncread([pathtofile,'/main_output_ANT_00001.nc'],'Hi');
 
-percent=25;
+% how much it will be decreased in percentage
+percent=40;
 till_decreased=ones(size(till_angle)); %allocate variable
-till_decreased=till_angle*(percent/100);
+till_decreased=till_angle*((100-percent)/100);
 
 %% create a copy of the file original file and modify it.
 % this is done to keep all the "mesh" parameters.
-path_output='/Users/frre9931/Documents/PhD/bed_roughness/modified/till_friction_angle_maxphi20_';
+path_output='/Users/frre9931/Documents/PhD/bed_roughness/modified/till_friction_angle_maxphi30_gamma99_SHR';
 copyfile([pathtofile,'/main_output_ANT_00001.nc'],[path_output,char(string(percent)),'percent.nc'])
 ncid = netcdf.open([path_output,char(string(percent)),'percent.nc'],"NC_WRITE");
 varid = netcdf.inqVarID(ncid,"till_friction_angle");

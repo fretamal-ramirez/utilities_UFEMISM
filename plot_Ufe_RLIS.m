@@ -2,7 +2,7 @@
 clear all; clc;
 
 %========= PATH TO OUTPUT UFEMISM DIRECTORY ==========
-output_folder = 'results_ant_PD_inversion_dHdt_init_R-LIS_smooth_Hb_icerises_PMP';
+output_folder = 'results_ant_PD_inversion_dHdt_init_R-LIS_gamma80_PMP_roughness_max30_SHR';
 %ufe_folder_path=['/Users/frre9931/Desktop/UFEMISM2.0_main/UFEMISM2.0/', output_folder];
 %ufe_folder_path=['/Users/frre9931/Desktop/UFEMISM2.0_porting/', output_folder];
 ufe_folder_path=['/Users/frre9931/Desktop/tetralith_results/', output_folder];
@@ -26,6 +26,8 @@ path(path,genpath('/Users/frre9931/Documents/PhD/cptcmap-pkg/cptcmap'));
 coast_MEaSUREs=shaperead('/Users/frre9931/Documents/PhD/MEaSUREs/Coastline_Antarctica_v02.shp');
 %function from Antarctic Maping Tools to project from x,y to lon,lat
 [coast_lat,coast_lon]=ps2ll(coast_MEaSUREs.X,coast_MEaSUREs.Y);
+% load the basins from MEaSUREs
+basins_MEaSUREs=shaperead('/Users/frre9931/Documents/PhD/MEaSUREs/Basins_Antarctica_v02.shp');
 %u_MEaSUREs=ncread('/Users/frre9931/Documents/PhD/MEaSUREs/antarctica_ice_velocity_450m_v2.nc','VX');
 %v_MEaSUREs=ncread('/Users/frre9931/Documents/PhD/MEaSUREs/antarctica_ice_velocity_450m_v2.nc','VY');
 uabs_MEaSUREs=ncread('/Users/frre9931/Desktop/UFEMISM2.0_main/UFEMISM2.0/data/MEaSUREs/Antarctica/surface_velocity_measures_2km.nc','uabs_surf');
@@ -113,6 +115,7 @@ mesh_first.T2m            = ncread( mesh_path_first,'T2m');
 mesh_first.Precip            = ncread( mesh_path_first,'Precip');
 mesh_first.uabs              = ncread( mesh_path_first,'uabs_surf');
 mesh_first.BMB               = ncread( mesh_path_first,'BMB');
+mesh_first.Hb                 = ncread( mesh_path_first,'Hb');
 [Hi_fix_mesh, maskHi0_mesh]= Hi0_to_NaN_mesh(mesh_first.Hi);
 mesh_first.mask = ncread( mesh_path_first, 'mask');
 
@@ -137,6 +140,14 @@ end
 mesh_first.Hi_diff=(mesh_first.Hi(:,end))-(mesh_first.Hi(:,1));
 % polygon for catchments
 ice_boundaries=shaperead('/Users/frre9931/Documents/PhD/MEaSUREs/IceBoundaries_Antarctica_v02.shp');
+
+% % calculate mask out of the ice using TriGC
+% clean_idx1=~isnan(IM2(:,1));
+% IM2_nonan=IM2(clean_idx1,:);
+% clean_idx2=~isnan(IM2_nonan(:,2));
+% IM2_nonan=IM2_nonan(clean_idx2,:);
+% Tri_inside_IM2=inpolygon(mesh_first.TriGC(:,1),mesh_first.TriGC(:,2),IM2(:,1),IM2(:,2));
+
 % plots
 % ice thickness
 if allow_plot_mesh
@@ -272,7 +283,7 @@ if allow_plot_mesh
     %        ,'flip',false,'ncol',100);
     colorbar;
     cptcmap('GMT_polar','flip',true,'ncol',100);
-    clim([-250 250]);
+    clim([-1000 1000]);
     plot(GL2(:,1),GL2(:,2),'LineWidth',2,'Color','black');
     plot(IM2(:,1),IM2(:,2),'LineWidth',2,'Color','black');
     t=title([output_folder,' Hi(tf) - Hi(t0)'],'Interpreter','none');
@@ -281,6 +292,20 @@ if allow_plot_mesh
         print([path_save,output_folder,'_mesh_1_Hi_diff'],'-dpng','-r300')
     end
 end
+% ========== 
+% == plot for mask
+% ==========
+if allow_plot_mesh
+    plot_mesh_data_a_RLIS(mesh_first,mesh_first.mask(:,1));
+    hold on
+    %cptcmap('/Users/frre9931/Documents/PhD/ScientificColourMaps8/bukavu/bukavu.cpt'...
+    %        ,'flip',false,'ncol',100);
+    colorbar;
+    plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','black');
+    plot(IM(:,1),IM(:,2),'LineWidth',2,'Color','black');
+    t=title([output_folder,' Mask'],'Interpreter','none');
+    t.Units='normalized';
+end
 
 %% different section of the code to plot differences between modelled and observed
 % I will use the data from MEaSUREs and grid output from the ROI
@@ -288,10 +313,61 @@ end
 uabs_ufe=ncread([ufe_folder_path, '/main_output_ANT_grid_ROI_RiiserLarsen.nc'],'uabs_surf');
 x_ufe=ncread([ufe_folder_path, '/main_output_ANT_grid_ROI_RiiserLarsen.nc'],'x');
 y_ufe=ncread([ufe_folder_path, '/main_output_ANT_grid_ROI_RiiserLarsen.nc'],'y');
+Hi_ufe=ncread([ufe_folder_path, '/main_output_ANT_grid_ROI_RiiserLarsen.nc'],'Hi');
+% create a mask where there is ice, to mask the velocity later
+[~, maskHi0_ufe]= Hi0_to_NaN(Hi_ufe);
 [xx_measures,yy_measures]=meshgrid(x_MEaSUREs,y_MEaSUREs);
 [xx_ufe,yy_ufe]=meshgrid(x_ufe,y_ufe);
 % interpolate MEaSUREs to same resolution as UFEMISM output
-uabs_measures_intep=interp2(xx_measures,yy_measures,uabs_MEaSUREs',xx_ufe,yy_ufe);
+uabs_measures_interp=interp2(xx_measures,yy_measures,uabs_MEaSUREs',xx_ufe,yy_ufe);
+uabs_diff=uabs_measures_interp-(uabs_ufe(:,:,end).*maskHi0_ufe(:,:,end))';
+
+% Set up GUI
+wa = 750;
+ha = 750;
+
+margins_hor = [125,125];
+margins_ver = [125,50];
+
+wf = margins_hor( 1) + wa + margins_hor( 2);
+hf = margins_ver( 1) + ha + margins_ver( 2);
+
+H.Fig = figure( 'position',[100,100,wf,hf],'color','w');
+H.Ax  = axes('parent',H.Fig,'units','pixels','position',[margins_hor(1),margins_ver(1),wa,ha],...
+  'xlim',[min(x_ufe)+5e4 max(x_ufe)-5e4],'ylim',[min(y_ufe)+5e4 max(y_ufe)-5e4],'fontsize',24,'xgrid','on','ygrid','on');
+hold on
+contourf(x_ufe,y_ufe,uabs_diff,100,'LineColor','none');
+plot(basins_MEaSUREs(4).X,basins_MEaSUREs(4).Y,'LineWidth',2,'Color','black'); %R-LIS
+plot(basins_MEaSUREs(3).X,basins_MEaSUREs(3).Y,'LineWidth',2,'Color','black'); % Brunt
+%plot(coast_MEaSUREs.X,coast_MEaSUREs.Y,'LineWidth',2,'Color','black'); % Brunt
+%plot(IM2(:,1),IM2(:,2),'LineWidth',2,'Color','black');
+cptcmap('/Users/frre9931/Documents/PhD/ScientificColourMaps8/vik/vik.cpt'...
+            ,'flip',false,'ncol',256);
+clim([-800 800])
+cb = colorbar;
+cb.Label.String = 'Surface ice velocity diffence (m/yr)';
+t=title(output_folder,'Interpreter','none');
+t.Units='normalized';
+
+%% code to plot the difference between two simulations
+output_folder2= 'results_ant_PD_maxphi_20_retreat_mask_code_SMB_and_phi_50percent'; 
+ufe_folder_path2=['/Users/frre9931/Desktop/tetralith_results/', output_folder2];
+
+mesh_path_sim2= [ufe_folder_path2, '/main_output_ANT_00001.nc']; %initial state
+
+% read_mesh_from_file
+mesh_sim2=read_mesh_from_file(mesh_path_sim2);
+mesh_sim2.Hb            = ncread( mesh_path_sim2,'Hb');
+
+% now both simulations have a value for Hb
+% first is stored in mesh_first.Hb and latter mesh_sim2.Hb
+% as we are working with same meshs it is fine to just substract
+
+% first - sim2 for the (end) time-step
+Hb_difference = mesh_first.Hb(:,end) - mesh_sim2.Hb(:,end);
+plot_mesh_data_a_RLIS(mesh_first, Hb_difference);
+hold on
+plot(IM2(:,1),IM2(:,2),'LineWidth',2,'Color','black');
 
 
 
