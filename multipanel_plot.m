@@ -3,15 +3,15 @@ clear all; close all; clc;
 
 % ==== DEFINE OUTPUTS ====
 outputs = { ...
-    'results_ant_PD_maxphi_20_HR_retreat_SMB_50percent',...
-    'results_ant_PD_maxphi_20_HR_retreat_phi_50percent',...
-    'results_ant_PD_maxphi_20_HR_retreat_SMB_and_phi_50percent',...
+    'results_ant_PD_maxphi_30_SHR_retreat_new',...
+    'results_ant_PD_maxphi_30_SHR_retreat_ocndT_5e-1',...
+    'results_ant_PD_maxphi_30_SHR_retreat_ocndT_2e1',...
 };
 titles_name = { ...
     %'max ϕ = 20', ...
-    'retreat with 50% SMB', ...
-    'retreat with 50% ϕ', ...
-    'retreat with 50% SMB & ϕ',...
+    'no-shelf', ...
+    'no-shelf & ocnT+0.5°C', ...
+    'no-shelf & ocnT+2.0°C',...
 };
 tile_size = 300; % pixels for each panel
 nCols = numel(outputs);
@@ -26,7 +26,7 @@ basepath = '/Users/frre9931/Desktop/tetralith_results/';
 colormaps.devon = '/Users/frre9931/Documents/PhD/ScientificColourMaps8/devon/devon.cpt';
 %plot_titles = {'Velocity (m/yr)', 'Basal melt rate (m/yr)', 'ΔIce thickness (m)'};
 plot_titles = {'Northings (m)', 'Northings (m)'};
-letters_for_plots = {'(a)','(b)','(c)','(d)','(e)','(f)','(g)','(h)'}; % 8 plot max for now
+letters_for_plots = {'(a)','(b)','(c)','(d)','(e)','(f)','(g)','(h)','(i)','(j)','(k)','(l)'}; % 12 plot max for now
 %plot_titles = {'Velocity (m/yr)', 'Basal melt rate (m/yr)', 'ΔIce thickness (m)', 'Till friction angle (°)'};
 %plot_titles = {'Velocity (m/yr)', 'Till friction angle (°)', 'ΔIce thickness (m)', 'Final ice thickness (m)'};
 
@@ -60,6 +60,12 @@ for i = 1:nCols
     [Hi_fix, maskHi0] = Hi0_to_NaN_mesh(mesh.Hi);
     mesh.Hi_diff = mesh.Hi(:,end) - mesh.Hi(:,1);
     mesh.Hb_diff = mesh.Hb(:,end) - mesh.Hb(:,1);
+    mesh.uabs_diff = mesh.uabs(:,end) - mesh.uabs(:,1);
+    [~, maskHi_ROI] = Hi0_to_NaN_mesh(mesh.Hi_diff);
+    
+    % create a mask from Hi mesh to uabs mesh
+    Fmask = scatteredInterpolant(mesh.V(:,1), mesh.V(:,2), maskHi0(:,end).*maskHi_ROI,'nearest', 'none');
+    mask_vel = Fmask(mesh.TriGC(:,1),mesh.TriGC(:,2));
 
     % === Grounding & ice margins ===
     nE = size(mesh.E,1);
@@ -72,12 +78,17 @@ for i = 1:nCols
     % --- 1. VELOCITY ROW ---
     % ======================
     ax_all(1,i) = nexttile(1 + (i-1)); % row 1
-    plot_mesh_data_b_RLIS(mesh, log10(mesh.uabs(:,end)), ax_all(1,i));
+    %plot_mesh_data_b_RLIS(mesh, log10(mesh.uabs(:,end)), ax_all(1,i));
+    plot_mesh_data_b_RLIS(mesh, mesh.uabs_diff.*mask_vel, ax_all(1,i));
     hold on;
     plot(GL2(:,1),GL2(:,2),'k','LineWidth',0.8);
     plot(IM2(:,1),IM2(:,2),'k','LineWidth',0.8);
-    cptcmap(colormaps.devon,'flip',false,'ncol',100);
-    clim([log10(1) log10(2000)]);
+    plot(rock_outcrops.X,rock_outcrops.Y,'LineWidth',0.8,'color',[0.25, 0.25, 0.25]);
+    cptcmap('/Users/frre9931/Documents/PhD/ScientificColourMaps8/lajolla/lajolla.cpt'...
+            ,'flip',true,'ncol',256);
+    clim([0 1000]);
+    %cptcmap(colormaps.devon,'flip',false,'ncol',100);
+    %clim([log10(1) log10(2000)]);
     title(titles_name{i},'Interpreter','none');
     text(-7.8e5,2.13e6,letters_for_plots{i},'FontWeight','bold','FontSize',13);
     %title(output_folder,'Interpreter','none');
@@ -102,13 +113,15 @@ for i = 1:nCols
     % --- 2. HI DIFFERENCE ROW ---
     % ===========================
     ax_all(2,i) = nexttile(nCols + i); % row 2
-    plot_mesh_data_a_RLIS(mesh, mesh.Hi_diff(:,1), ax_all(2,i));
+    plot_mesh_data_a_RLIS(mesh, mesh.Hi_diff(:,1).*maskHi_ROI, ax_all(2,i));
     hold on;
     plot(GL2(:,1),GL2(:,2),'k','LineWidth',0.8);
     plot(IM2(:,1),IM2(:,2),'k','LineWidth',0.8);
     plot(rock_outcrops.X,rock_outcrops.Y,'LineWidth',0.8,'color',[0.25, 0.25, 0.25]);
     plot(GL1(:,1),GL1(:,2),'LineWidth',1.0,'Color','green','linestyle','-.')
-    cptcmap('GMT_polar','flip',true,'ncol',100);
+    %cptcmap('GMT_polar','flip',true,'ncol',100);
+    cptcmap('/Users/frre9931/Documents/PhD/ScientificColourMaps8/vik/vik.cpt'...
+            ,'flip',true,'ncol',256);
     clim([-1000 1000]);
     xlabel('Eastings (m)')
     text(-7.8e5,2.13e6,letters_for_plots{i+nCols},'FontWeight','bold','FontSize',13);
@@ -203,9 +216,9 @@ for r = 1:nRows
     cb = colorbar(row_axes(end),'eastoutside');
     switch r
         case 1
-            cb.Ticks = log10([1 10 50 100 500 1000 2000]);
-            cb.TickLabels = {'1','10','50','100','500','1000','2000'};
-            cb.Label.String = 'Surface velocity (m/yr)';
+            %cb.Ticks = log10([1 10 50 100 500 1000 2000]);
+            %cb.TickLabels = {'1','10','50','100','500','1000','2000'};
+            cb.Label.String = 'Surface velocity difference (m/yr)';
             cb.Label.FontSize = 12;
         case 2
             %cb.Label.String = 'BMB (m/yr)';

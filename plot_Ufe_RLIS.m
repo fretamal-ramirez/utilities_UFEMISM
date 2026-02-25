@@ -2,7 +2,7 @@
 clear all; clc;
 
 %========= PATH TO OUTPUT UFEMISM DIRECTORY ==========
-output_folder = 'results_ant_PD_inversion_dHdt_init_R-LIS_gamma80_PMP_roughness_max30_SHR';
+output_folder = 'results_ant_PD_inversion_dHdt_init_R-LIS_gamma99_PMP_roughness_M11_Hb-1500to0m_SHR';
 %ufe_folder_path=['/Users/frre9931/Desktop/UFEMISM2.0_main/UFEMISM2.0/', output_folder];
 %ufe_folder_path=['/Users/frre9931/Desktop/UFEMISM2.0_porting/', output_folder];
 ufe_folder_path=['/Users/frre9931/Desktop/tetralith_results/', output_folder];
@@ -118,6 +118,7 @@ mesh_first.BMB               = ncread( mesh_path_first,'BMB');
 mesh_first.Hb                 = ncread( mesh_path_first,'Hb');
 [Hi_fix_mesh, maskHi0_mesh]= Hi0_to_NaN_mesh(mesh_first.Hi);
 mesh_first.mask = ncread( mesh_path_first, 'mask');
+mesh_first.till_friction_angle = ncread( mesh_path_first,'till_friction_angle');
 
 if allow_mesh_update
     % path to the new mesh, for now just changing the number here
@@ -283,7 +284,7 @@ if allow_plot_mesh
     %        ,'flip',false,'ncol',100);
     colorbar;
     cptcmap('GMT_polar','flip',true,'ncol',100);
-    clim([-1000 1000]);
+    clim([-500 500]);
     plot(GL2(:,1),GL2(:,2),'LineWidth',2,'Color','black');
     plot(IM2(:,1),IM2(:,2),'LineWidth',2,'Color','black');
     t=title([output_folder,' Hi(tf) - Hi(t0)'],'Interpreter','none');
@@ -304,6 +305,35 @@ if allow_plot_mesh
     plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','black');
     plot(IM(:,1),IM(:,2),'LineWidth',2,'Color','black');
     t=title([output_folder,' Mask'],'Interpreter','none');
+    t.Units='normalized';
+end
+% ========== 
+% == plot for Hb
+% ==========
+if allow_plot_mesh
+    plot_mesh_data_a_RLIS(mesh_first,mesh_first.Hb(:,end));
+    hold on
+    %cptcmap('/Users/frre9931/Documents/PhD/ScientificColourMaps8/bukavu/bukavu.cpt'...
+    %        ,'flip',false,'ncol',100);
+    colorbar;
+    plot(GL(:,1),GL(:,2),'LineWidth',2,'Color','black');
+    plot(IM(:,1),IM(:,2),'LineWidth',2,'Color','black');
+    t=title([output_folder,' Hb'],'Interpreter','none');
+    t.Units='normalized';
+    clim([-1000 -250]);
+end
+% ========== 
+% == plot for till friction angle
+% ==========
+if allow_plot_mesh
+    plot_mesh_data_a_RLIS(mesh_first,mesh_first.till_friction_angle(:,end));
+    hold on
+    %cptcmap('/Users/frre9931/Documents/PhD/ScientificColourMaps8/bukavu/bukavu.cpt'...
+    %        ,'flip',false,'ncol',100);
+    colorbar;
+    plot(GL2(:,1),GL2(:,2),'LineWidth',2,'Color','black');
+    plot(IM2(:,1),IM2(:,2),'LineWidth',2,'Color','black');
+    t=title([output_folder,' till friction angle'],'Interpreter','none');
     t.Units='normalized';
 end
 

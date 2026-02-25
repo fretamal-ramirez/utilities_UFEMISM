@@ -9,7 +9,7 @@ clear all; close all; clc;
 
 % ==== DEFINE OUTPUTS ====
 outputs = { ...
-    'results_ant_PD_inversion_dHdt_init_R-LIS_gamma99_PMP_roughness_max30_SHR',...
+    'results_ant_PD_inversion_dHdt_init_R-LIS_gamma99_PMP_roughness_M11_Hb-1000to0m_SHR',...
 };
 titles_name = { ...
     'HR control', ...
@@ -24,8 +24,8 @@ fig_width  = tile_size * nCols;
 fig_height = tile_size * nRows;
 
 % ==== PATHS ====
-basepath = '/Volumes/One Touch/results_UFEMISM/tetralith_results/';
-%basepath = '/Users/frre9931/Desktop/tetralith_results/';
+%basepath = '/Volumes/One Touch/results_UFEMISM/tetralith_results/';
+basepath = '/Users/frre9931/Desktop/tetralith_results/';
 colormaps.devon = '/Users/frre9931/Documents/PhD/ScientificColourMaps8/devon/devon.cpt';
 plot_titles = {'Velocity (m/yr)', 'Basal melt rate (m/yr)', 'ΔIce thickness (m)'};
 %plot_titles = {'Velocity (m/yr)', 'Basal melt rate (m/yr)', 'ΔIce thickness (m)', 'Till friction angle (°)'};
@@ -206,6 +206,12 @@ rmseHi_in_basin_RLIS = rmse(mesh.Hi(:,1),(mesh.Hi(:,end).*(Hi_diff_in_basin_RLIS
 rmseHi_in_basin_BIS = rmse(mesh.Hi(:,1),(mesh.Hi(:,end).*(Hi_diff_in_basin_BIS./Hi_diff_in_basin_BIS)),'all','omitnan');
 rmseHi_in_shelf_RLIS = rmse(mesh.Hi(:,1),(mesh.Hi(:,end).*(Hi_diff_in_shelf_RLIS./Hi_diff_in_shelf_RLIS)),'all','omitnan');
 rmseHi_in_shelf_BIS = rmse(mesh.Hi(:,1),(mesh.Hi(:,end).*(Hi_diff_in_shelf_BIS./Hi_diff_in_shelf_BIS)),'all','omitnan');
+
+% print the RMSEs as a table in the terminal
+fprintf('RMSE for :    RL basin | RLIS | SW basin | BIS\n');
+fprintf('Ice velocity  = %.0f | %.0f | %.0f | %.0f\n', rmseU_in_basin_RLIS, rmseU_in_shelf_RLIS, rmseU_in_basin_BIS, rmseU_in_shelf_BIS);
+fprintf('Ice thickness = %.0f | %.0f | %.0f | %.0f\n', rmseHi_in_basin_RLIS, rmseHi_in_shelf_RLIS, rmseHi_in_basin_BIS, rmseHi_in_shelf_BIS);
+
 %% plot
 fig=figure('Units','pixels','Position',[100 100 fig_width+100 fig_height],'Visible','off');
 tiledlayout(nRows,nCols,"TileSpacing","compact","Padding","compact");
