@@ -12,7 +12,7 @@ field2d=Hi;
 
 for i=1:size(field2d,1)
     for j=1:size(field2d,2)
-        if field2d(i,j)==0
+        if abs(field2d(i,j))< 1e-4
             field2d(i,j)=NaN;
             mask(i,j)=NaN;
         end
