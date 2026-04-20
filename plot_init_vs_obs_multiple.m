@@ -7,6 +7,10 @@ outputs = { ...
     'results_ant_PD_inversion_dHdt_init_R-LIS_gamma99_PMP_roughness_max30_SHR_new'...
     'results_ant_PD_inversion_dHdt_init_R-LIS_gamma99_PMP_roughness_M11_Hb-2000to-250m_SHR',...
 };
+titles_name = { ...
+    'standard', ...
+    'Hb capped ϕ',...
+};
 tile_size = 300; % pixels for each panel
 nCols = numel(outputs);
 nRows = 2; % uabs_diff, Hi_diff
@@ -19,6 +23,17 @@ ymin = 1137850.0; ymax = 2217850.0;
 
 fig=figure('Units','pixels','Position',[100 100 fig_width+100 fig_height],'Visible','off');
 tiledlayout(nRows,nCols,"TileSpacing","compact","Padding","compact");
+
+palette_jfly = [
+    102 102 102;
+    230 159   0;
+    86  180 233;
+    0   158 115;
+    240 226 66;
+    0   114 178;
+    213  94   0;
+    204 121 167;
+] / 255;
 
 % ==== PATHS ====
 %basepath = '/Volumes/One Touch/results_UFEMISM/tetralith_results/';
@@ -259,8 +274,9 @@ GL_forced = ncread([basepath,'results_ant_PD_maxphi_Hb-2000to-250m_SHR_retreat_o
     % if velocity difference
     contourf(x_ufe,y_ufe,uabs_diff,100,'LineColor','none');
     hold on;
-    plot(basins_MEaSUREs(4).X,basins_MEaSUREs(4).Y,'LineWidth',0.8,'Color','green'); %R-LIS
-    plot(GL_forced(:,1),GL_forced(:,2),'r','LineWidth',0.8,'LineStyle','-');
+    plot(basins_MEaSUREs(3).X,basins_MEaSUREs(3).Y,'LineWidth',1.5,'Color',palette_jfly(8,:)); % Brunt
+    plot(basins_MEaSUREs(4).X,basins_MEaSUREs(4).Y,'LineWidth',1.5,'Color',palette_jfly(4,:)); %R-LIS
+    %plot(GL_forced(:,1),GL_forced(:,2),'r','LineWidth',0.8,'LineStyle','-');
     plot(GL2(:,1),GL2(:,2),'k','LineWidth',0.8);
     plot(IM2(:,1),IM2(:,2),'k','LineWidth',0.8);
     cptcmap('/Users/frre9931/Documents/PhD/ScientificColourMaps8/vik/vik.cpt'...
@@ -274,7 +290,8 @@ GL_forced = ncread([basepath,'results_ant_PD_maxphi_Hb-2000to-250m_SHR_retreat_o
     %cb.Label.FontSize = 12;
     if k == 1
         ylabel(plot_titles{1},'FontWeight','bold');
-    end  
+    end 
+    title(titles_name{k},'Interpreter','none');
     text(-7.8e5,2.13e6,letters_for_plots{k},'FontWeight','bold','FontSize',13);
     %text(-6.0e5,1.95e6,'(a)','FontWeight','bold','FontSize',13);
     % =================================
@@ -284,8 +301,9 @@ GL_forced = ncread([basepath,'results_ant_PD_maxphi_Hb-2000to-250m_SHR_retreat_o
     plot_mesh_data_a_RLIS(mesh, mesh.Hi_diff(:,1).*maskHi0(:,end), ax_all(2,k));
     %plot_mesh_data_a_RLIS(mesh, Hi_diff_in_basin_RLIS, ax_all(2,2));
     hold on;
-    plot(basins_MEaSUREs(4).X,basins_MEaSUREs(4).Y,'LineWidth',0.8,'Color','green'); %R-LIS
-    plot(GL_forced(:,1),GL_forced(:,2),'LineWidth',0.8,'LineStyle','-','Color','red');
+    plot(basins_MEaSUREs(3).X,basins_MEaSUREs(3).Y,'LineWidth',1.5,'Color',palette_jfly(8,:)); % Brunt
+    plot(basins_MEaSUREs(4).X,basins_MEaSUREs(4).Y,'LineWidth',1.5,'Color',palette_jfly(4,:)); %R-LIS
+%    plot(GL_forced(:,1),GL_forced(:,2),'LineWidth',0.8,'LineStyle','-','Color','red');
     plot(GL2(:,1),GL2(:,2),'k','LineWidth',0.8);
     plot(rock_outcrops.X,rock_outcrops.Y,'LineWidth',0.8,'color',[0.25, 0.25, 0.25]);
     plot(IM2(:,1),IM2(:,2),'k','LineWidth',0.8);
@@ -321,7 +339,7 @@ for r = 1:nRows
         case 1
             %cb.Ticks = log10([1 10 50 100 500 1000 2000]);
             %cb.TickLabels = {'1','10','50','100','500','1000','2000'};
-            cb.Label.String = 'Surface velocity difference (m/yr)';
+            cb.Label.String = 'Surface velocity difference (m yr^{-1})';
             cb.Label.FontSize = 12;
         case 2
             %cb.Label.String = 'BMB (m/yr)';
@@ -330,127 +348,4 @@ for r = 1:nRows
             %cb.Label.String = 'Till friction angle (°)';
     end
 end
-print(fig,'/Users/frre9931/Documents/PhD/ANT_UFEMISM/plots_ant/Riiser-Larsen/multipanel/multipanel_RLIS.png','-dpng','-r300');
-%% repeat some of the things above to create only the simulation towards 2300
-clear all;
-outputs = { ...
-    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_retreat_ocndT_2e1',...
-};
-
-tile_size = 300; % pixels for each panel
-nCols = 1;
-nRows = 1; % Hi_diff
-timeslice = 2300; % time to be plotted
-
-fig_width  = tile_size * nCols;
-fig_height = tile_size * nRows;
-
-% ==== PATHS ====
-%basepath = '/Volumes/One Touch/results_UFEMISM/tetralith_results/';
-basepath = '/Users/frre9931/Desktop/tetralith_results/';
-colormaps.devon = '/Users/frre9931/Documents/PhD/ScientificColourMaps8/devon/devon.cpt';
-plot_titles = {'Velocity (m/yr)', 'Basal melt rate (m/yr)', 'ΔIce thickness (m)'};
-%plot_titles = {'Velocity (m/yr)', 'Basal melt rate (m/yr)', 'ΔIce thickness (m)', 'Till friction angle (°)'};
-%plot_titles = {'Velocity (m/yr)', 'Till friction angle (°)', 'ΔIce thickness (m)', 'Final ice thickness (m)'};
-
-% ==== Add extra functions ====
-% add functions from UFEMISM library
-path(path,genpath('/Users/frre9931/Desktop/UFEMISM2.0_main/UFEMISM2.0/tools/matlab'));
-%path(path,genpath('/Users/frre9931/Documents/PhD/m_map'));
-%path(path,genpath('/Users/frre9931/Documents/PhD/Antarctic-Mapping-Tools-main'));
-path(path,genpath('/Users/frre9931/Documents/PhD/cptcmap-pkg/cptcmap'));
-
-% ===== Data to complement plots ====
-rock_outcrops=shaperead('/Users/frre9931/Documents/PhD/RiiserLarsen/ADD_RockOutcrops_RLIS.shp');
-% load shapefiles with basins
-basins_MEaSUREs=shaperead('/Users/frre9931/Documents/PhD/MEaSUREs/Basins_Antarctica_v02.shp');
-
-% Preallocate axes for later shared colorbars
-ax_all = gobjects(nRows,nCols);
-output_folder=outputs{1};
-filepath = [basepath,output_folder,'/main_output_ANT_00001.nc'];
-
-% Load MEaSUREs data
-uabs_MEaSUREs=ncread('/Users/frre9931/Desktop/UFEMISM2.0_main/UFEMISM2.0/data/MEaSUREs/Antarctica/surface_velocity_measures_2km.nc','uabs_surf');
-x_MEaSUREs=ncread('/Users/frre9931/Desktop/UFEMISM2.0_main/UFEMISM2.0/data/MEaSUREs/Antarctica/surface_velocity_measures_2km.nc','x');
-y_MEaSUREs=ncread('/Users/frre9931/Desktop/UFEMISM2.0_main/UFEMISM2.0/data/MEaSUREs/Antarctica/surface_velocity_measures_2km.nc','y');
-% change -10000 to NaN for plots
-for i=1:length(uabs_MEaSUREs(:,1))
-    for j=1:length(uabs_MEaSUREs(1,:))
-        if uabs_MEaSUREs(i,j)==-10000
-            uabs_MEaSUREs(i,j)=NaN;
-        end
-    end
-end
-
-modeltime = ncread(filepath, 'time');
-time_to_plot = find(modeltime==timeslice);
-% === Load mesh ===
-mesh = read_mesh_from_file(filepath);
-mesh.uabs = ncread(filepath,'uabs_surf');
-mesh.BMB  = ncread(filepath,'BMB');
-mesh.Hi   = ncread(filepath,'Hi');
-mesh.mask = ncread(filepath,'mask');
-mesh.Hb   = ncread(filepath, 'Hb');
-mesh.tfa  = ncread(filepath, 'till_friction_angle');
-[Hi_fix, maskHi0] = Hi0_to_NaN_mesh(mesh.Hi);
-mesh.Hi_diff = mesh.Hi(:,time_to_plot) - mesh.Hi(:,1);
-mesh.Hb_diff = mesh.Hb(:,time_to_plot) - mesh.Hb(:,1);
-
-
-for i=1:size(mesh.BMB,1)
-    for j=1:size(mesh.BMB,2)
-        if mesh.BMB(i,j)==0
-            mesh.BMB(i,j)=NaN;
-        end
-    end
-end
-    % === Grounding & ice margins ===
-nE = size(mesh.E,1);
-nt = length(ncread(filepath,'time'));
-GL1 = ncread(filepath,'grounding_line',[1,1,1],[nE,2,1]);
-GL2 = ncread(filepath,'grounding_line',[1,1,nt],[nE,2,1]);
-GL2300 = ncread(filepath,'grounding_line',[1,1,time_to_plot],[nE,2,1]);
-IM2 = ncread(filepath,'ice_margin',[1,1,nt],[nE,2,1]);
-IM2300 = ncread(filepath,'ice_margin',[1,1,time_to_plot],[nE,2,1]);
-
-% masks outside the ice sheet
-mask_init    = mesh.Hi(:,1) > 0;
-mask_current = mesh.Hi(:,time_to_plot) > 0;
-mesh.Hi_diff(~mask_init)=NaN;
-
-%% plot
-xmin = -650000.0; xmax = -100000.0;
-ymin = 1550000.0; ymax = 1990000.0;
-
-fig=figure('Units','pixels','Position',[100 100 fig_width+100 fig_height],'Visible','off');
-tiledlayout(nRows,nCols,"TileSpacing","compact","Padding","compact");
-
-    % =================================
-    % --- 1,1 Hi DIFF RLIS IN MESH ---
-    % =================================
-    ax_all(1,1) = nexttile(1); % row 3
-    plot_mesh_data_a_onlyRLIS(mesh, mesh.Hi_diff(:,1), ax_all(1,1));
-    %plot_mesh_data_a_RLIS(mesh, Hi_diff_in_basin_RLIS, ax_all(2,2));
-    hold on;
-    plot(basins_MEaSUREs(4).X,basins_MEaSUREs(4).Y,'LineWidth',0.8,'Color','green'); %R-LIS
-    plot(GL1(:,1),GL1(:,2),'LineWidth',0.8,'LineStyle','-','Color','red');
-    plot(GL2300(:,1),GL2300(:,2),'k','LineWidth',0.8);
-    plot(rock_outcrops.X,rock_outcrops.Y,'LineWidth',0.8,'color',[0.25, 0.25, 0.25]);
-    plot(IM2300(:,1),IM2300(:,2),'k','LineWidth',0.8);
-    %plot(iceshelves_MEaSUREs(37).X,iceshelves_MEaSUREs(37).Y,'LineWidth',0.8,'Color','black'); %R-LIS
-    %plot(iceshelves_MEaSUREs(36).X,iceshelves_MEaSUREs(36).Y,'LineWidth',0.8,'Color','black'); % Brunt
-    cptcmap('/Users/frre9931/Documents/PhD/ScientificColourMaps8/vik/vik.cpt'...
-            ,'flip',true,'ncol',256);
-    clim([-1000 1000]);
-    ylabel('Northings (m)','FontWeight','bold');
-    xlabel('Eastings (m)','FontWeight','bold');
-    title('Year 2300 relative to 2000')
-    %text(-6.0e5,1.95e6,'(b)','FontWeight','bold','FontSize',13);
-    %text(-8e5,2.1e6,['RMSE',string(round(rmseH_in_ROI))]);
-    cb=colorbar;
-    cb.Label.String = 'Ice thickness difference (m)';
-    cb.Label.FontSize = 12;
-    text(-7.8e5,2.13e6,'(d)','FontWeight','bold','FontSize',13);
-   
-    print(fig,'/Users/frre9931/Documents/PhD/ANT_UFEMISM/plots_ant/Riiser-Larsen/multipanel/Hidiff_RLIS.png','-dpng','-r300');
+print(fig,'/Users/frre9931/Documents/PhD/ANT_UFEMISM/plots_ant/Riiser-Larsen/multipanel/multipanel_RLIS_obs.png','-dpng','-r300');
