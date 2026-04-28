@@ -31,8 +31,8 @@ title('Simulation using FCMP')
 % ylabel('ice volume');
 
 %% something similar but now to calculate the volume_af difference between control and retreat
-folder_ctrl='results_ant_PD_maxphi_20_HR_ctrl2500_SMB_and_phi_50percent';
-folder_run='results_ant_PD_maxphi_20_HR_retreat_SMB_and_phi_50percent';
+folder_ctrl='results_ant_PD_maxphi_Hb-2000to-250m_SHR_ctrl2500';
+folder_run='results_ant_PD_maxphi_Hb-2000to-250m_SHR_retreat';
 %path_ctrl = '/Users/frre9931/Desktop/tetralith_results/results_ant_PD_maxphi_20_ctrl2500_SMB_and_phi_50percent/scalar_output_ANT_00001.nc';
 path_ctrl = ['/Users/frre9931/Desktop/tetralith_results/',folder_ctrl,'/scalar_output_ANT_00001.nc'];
 path_run  = ['/Users/frre9931/Desktop/tetralith_results/',folder_run,'/scalar_output_ANT_00001.nc'];
@@ -55,36 +55,32 @@ final_sea_level_contribution = ice_volume_af_ctrl(end) - ice_volume_af_run(end);
 
 % ==== DEFINE OUTPUTS ====
 outputs = { ...
-    'results_ant_PD_maxphi_30_SHR_ctrl2500_new',...
-    'results_ant_PD_maxphi_30_SHR_ctrl2500_ocndT_1e-1',...
-    'results_ant_PD_maxphi_30_SHR_ctrl2500_ocndT_2e-1',...
-    'results_ant_PD_maxphi_30_SHR_ctrl2500_ocndT_5e-1',...
-    'results_ant_PD_maxphi_30_SHR_ctrl2500_ocndT_1e1',...
-    'results_ant_PD_maxphi_30_SHR_ctrl2500_ocndT_2e1',...
-    'results_ant_PD_maxphi_30_SHR_retreat_new',...
-    'results_ant_PD_maxphi_30_SHR_retreat_ocndT_1e-1',...
-    'results_ant_PD_maxphi_30_SHR_retreat_ocndT_2e-1',...
-    'results_ant_PD_maxphi_30_SHR_retreat_ocndT_5e-1',...
-    'results_ant_PD_maxphi_30_SHR_retreat_ocndT_1e1',...
-    'results_ant_PD_maxphi_30_SHR_retreat_ocndT_2e1',...
+    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_ctrl2500_ocndT_1e-1',...
+    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_ctrl2500_ocndT_2e-1',...
+    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_ctrl2500_ocndT_5e-1',...
+    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_ctrl2500_ocndT_1e1',...
+    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_ctrl2500_ocndT_2e1',...   
+    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_gradualRT_25km',...
+    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_gradualRT_50km',...
+    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_retreat',...
 };
 legend_name = { ...
-    'control',...
-    'oceanT+0.1°C',...
-    'oceanT+0.2°C',...
-    'oceanT+0.5°C',...
-    'oceanT+1.0°C',...
-    'oceanT+2.0°C',...
-    'no-shelf',...
-    'no-shelf oceanT +0.1°C', ...
-    'no-shelf oceanT +0.2°C', ...
-    'no-shelf oceanT +0.5°C', ...
-    'no-shelf oceanT +1.0°C', ...
-    'no-shelf oceanT +2.0°C', ...
+    'OC+0.1°C',...
+    'OC+0.2°C',...
+    'OC+0.5°C',...
+    'OC+1.0°C',...
+    'OC+2.0°C',...
+    'RT25',...
+    'RT50',...
+    'NS',...
 };
-
-basepath = '/Users/frre9931/Desktop/tetralith_results/';
-
+% add simulation for PD ctrl
+folder_ctrl={ ...
+    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_ctrl2500',...
+    'results_ant_PD_maxphi_30_SHR_ctrl2500_new',...
+    };
+%basepath = '/Users/frre9931/Desktop/tetralith_results/';
+basepath = '/Volumes/One Touch/results_UFEMISM/tetralith_results/outputs/';
 % define SL contribtion for PD AIS, extracted from UFEMISM
 PD_SL = 55.7; 
 
@@ -94,7 +90,10 @@ fig_height = 300;
 
 % limits for plot
 xmin=2000; xmax=2500;
-ymin=-25; ymax=100; % 350 it was before
+ymin=-5; ymax=25; % 350 it was before
+
+%
+plotcase = 'ctrl'; % could be ctrl or init
 
 %start figure
 H.fig = figure('Units','pixels','Position',[100 100 fig_width fig_height],'Visible','on');
@@ -133,7 +132,7 @@ palette_jfly = [
     204 121 167;
 ] / 255;
 
-plots_with_same_style=6;
+plots_with_same_style=8;
 
 % Use tiledlayout with minimal padding and spacing
 tl = tiledlayout('flow'); % 'flow' creates a single tile for one plot
@@ -147,16 +146,44 @@ for i=1:length(outputs)
     ice_volume_af=ncread(filepath,'ice_volume_af');
     time = ncread(filepath,"time");
     
+    if i > length(plots_with_same_style)
+        path_ctrl = fullfile(basepath,folder_ctrl{2},'/scalar_output_ANT_00001.nc');
+        ice_volume_af_ctrl=ncread(path_ctrl,'ice_volume_af');
+        time_ctrl = ncread(path_ctrl,'time');
+    else
+        path_ctrl = fullfile(basepath,folder_ctrl{1},'/scalar_output_ANT_00001.nc');
+        ice_volume_af_ctrl=ncread(path_ctrl,'ice_volume_af');
+        time_ctrl = ncread(path_ctrl,'time');
+    end
+
+    % interp to ctrl values
+    ice_volume_af_interp = interp1(time,ice_volume_af,time_ctrl);
+
     % sea level contribution respect to PD
     SLC_respect_PD = PD_SL - ice_volume_af ;
     % sea level contribution respect to initial state
     % so it will start from 0
     SLC_respect_init = ice_volume_af(1) - ice_volume_af;
+
+    % SLC respect to ctrl sim
+    SLC_respect_ctrl = ice_volume_af_interp(1) - ice_volume_af_interp - (ice_volume_af_ctrl(1)-ice_volume_af_ctrl);
+    switch plotcase
+    case('init')
     % plot time series, *1000 to show it in mm instead of meters
     if i <= plots_with_same_style % it was set to 8 before
         plot(time, SLC_respect_init*1000,'LineWidth',2,'Color',palette_jfly(i,:))
     else
         plot(time, SLC_respect_init*1000,'LineWidth',2,'LineStyle','--','Color',palette_jfly(i-plots_with_same_style,:))
+    end
+    case('ctrl')
+    % plot time series, *1000 to show it in mm instead of meters
+    if i <= plots_with_same_style % it was set to 8 before
+        plot(time_ctrl, SLC_respect_ctrl*1000,'LineWidth',2,'Color',palette_jfly(i,:))
+    else
+        plot(time_ctrl, SLC_respect_ctrl*1000,'LineWidth',2,'LineStyle','--','Color',palette_jfly(i-plots_with_same_style,:))
+    end
+    otherwise
+            disp('unknown plot case');
     end
     xlabel('Time (yr)');
     ylabel('SLR contribution (mm)');
@@ -179,18 +206,22 @@ lgd_exp = legend(hexp, legend_name(1:plots_with_same_style), ...
 %lgd_exp.Box = 'off';
 lgd_exp.AutoUpdate = 'off';
 
-ax = gca;
-pos = ax.Position;
+% % uncomment this to make the extra legend
+% % ======================================
+% 
+% ax = gca;
+% pos = ax.Position;
+% 
+% ax2 = axes('Position',[pos(1)+0.29 pos(2)+0.73 0.07 0.05]);
+% plot([0 1],[0.7 0.7],'k-','LineWidth',2); hold on
+% plot([0 1],[0.3 0.3],'k--','LineWidth',2)
+% 
+% % text(1.1,0.7,'max\phi = 20°','FontSize',10)
+% % text(1.1,0.3,'max\phi = 30°','FontSize',10)
+% text(1.1,0.7,'Hb capped','FontSize',10)
+% text(1.1,0.3,'standard','FontSize',10)
+% 
+% axis off
 
-ax2 = axes('Position',[pos(1)+0.29 pos(2)+0.73 0.07 0.05]);
-plot([0 1],[0.7 0.7],'k-','LineWidth',2); hold on
-plot([0 1],[0.3 0.3],'k--','LineWidth',2)
-
-% text(1.1,0.7,'max\phi = 20°','FontSize',10)
-% text(1.1,0.3,'max\phi = 30°','FontSize',10)
-text(1.1,0.7,'control','FontSize',10)
-text(1.1,0.3,'no-shelf','FontSize',10)
-
-axis off
-
+%==========================================
 print(H.fig,'/Users/frre9931/Documents/PhD/ANT_UFEMISM/plots_ant/Riiser-Larsen/multipanel/scalarSLE.png','-dpng','-r300');
