@@ -274,5 +274,5 @@ for r = 1:nRows
 end
 
 %print(fig,'/Users/frre9931/Documents/PhD/ANT_UFEMISM/plots_ant/Riiser-Larsen/multipanel/multipanel_plot.png','-dpng','-r300');
-print(fig,'/Users/frre9931/Documents/PhD/ANT_UFEMISM/plots_ant/Riiser-Larsen/multipanel/multipanel_plot.pdf','-dpdf','-vector');
+print(fig,'/Users/frre9931/Documents/PhD/ANT_UFEMISM/plots_ant/Riiser-Larsen/multipanel/multipanel_Hb_OC+RT25.pdf','-dpdf','-vector');
 %exportgraphics(fig,'/Users/frre9931/Documents/PhD/ANT_UFEMISM/plots_ant/Riiser-Larsen/multipanel/multipanel_plot.pdf','ContentType','vector')

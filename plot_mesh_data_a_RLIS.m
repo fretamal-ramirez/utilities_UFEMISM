@@ -1,4 +1,4 @@
-function H = plot_mesh_data_a_RLIS(mesh, d, ax)
+function H = plot_mesh_data_a_RLIS(mesh, d, ax, font_size)
 % Plot UFEMISM mesh data (Riiser-Larsen region)
 % Optional input:
 %   ax — axes handle to plot into. If not provided, creates new figure.
@@ -34,7 +34,7 @@ else
     H.Fig = ancestor(ax,'figure');
     H.Ax = ax;
     set(H.Ax,'XLim',[xmin,xmax],'YLim',[ymin,ymax],...
-        'XGrid','on','YGrid','on','Layer','top');
+        'XGrid','on','YGrid','on','Layer','top','FontSize',font_size);
 end
 
 % === Plot patch ===

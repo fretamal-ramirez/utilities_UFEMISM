@@ -3,12 +3,16 @@ clear all; close all; clc;
 
 % ==== DEFINE OUTPUTS ====
 outputs = { ...
+    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_gradualRT_25km_ocndT_1e-1',...
+    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_gradualRT_25km_ocndT_2e-1',...
     'results_ant_PD_maxphi_Hb-2000to-250m_SHR_gradualRT_25km_ocndT_5e-1',...
     'results_ant_PD_maxphi_Hb-2000to-250m_SHR_gradualRT_25km_ocndT_1e1',...
     'results_ant_PD_maxphi_Hb-2000to-250m_SHR_gradualRT_25km_ocndT_2e1',...
 };
 titles_name = { ...
     %'max ϕ = 30', ...
+    'OC 0.1 + RT25',...
+    'OC 0.2 + RT25',...
     'OC 0.5 + RT25',...
     'OC 1.0 + RT25',...
     'OC 2.0 + RT25',...
@@ -18,8 +22,8 @@ tile_size = 300; % pixels for each panel
 nCols = numel(outputs);
 nRows = 2; % uabs, BMB, Hi_diff
 
-fig_width  = tile_size * nCols;
-fig_height = tile_size * nRows;
+fig_width  = 17.9; % 179 mm, two columns JOG
+fig_height = 9.0; % 254 mm maximum height JOG
 
 % ==== PATHS ====
 %basepath = '/Volumes/One Touch/results_UFEMISM/tetralith_results/';
@@ -27,7 +31,8 @@ basepath = '/Users/frre9931/Desktop/tetralith_results/';
 colormaps.devon = '/Users/frre9931/Documents/PhD/ScientificColourMaps8/devon/devon.cpt';
 %plot_titles = {'Velocity (m/yr)', 'Basal melt rate (m/yr)', 'ΔIce thickness (m)'};
 plot_titles = {'Northings (m)', 'Northings (m)'};
-plot_font_size = 8;
+plot_font_size = 5;
+plot_line_width = 0.3;
 letters_for_plots = {'(a)','(b)','(c)','(d)','(e)','(f)','(g)','(h)','(i)','(j)','(k)','(l)'}; % 12 plot max for now
 %plot_titles = {'Velocity (m/yr)', 'Basal melt rate (m/yr)', 'ΔIce thickness (m)', 'Till friction angle (°)'};
 %plot_titles = {'Velocity (m/yr)', 'Till friction angle (°)', 'ΔIce thickness (m)', 'Final ice thickness (m)'};
@@ -57,8 +62,8 @@ rock_outcrops=shaperead('/Users/frre9931/Documents/PhD/RiiserLarsen/ADD_RockOutc
 %fig=figure('Units','pixels','Position',[100 100 fig_width fig_height],'Visible','off');
 fig = figure('Visible','off');
 set(fig,'PaperUnits','centimeters');
-set(fig,'PaperSize',[17.9 25.4/1.8]);
-set(fig,'PaperPosition',[0 0 17.9 25.4/1.8]);
+set(fig,'PaperSize',[fig_width fig_height]);
+set(fig,'PaperPosition',[0 0 fig_width fig_height]);
 
 tiledlayout(nRows,nCols,"TileSpacing","compact","Padding","compact");
 basins_MEaSUREs=shaperead('/Users/frre9931/Documents/PhD/MEaSUREs/Basins_Antarctica_v02.shp');
@@ -106,12 +111,12 @@ for i = 1:nCols
     %    plot_mesh_data_b_RLIS(mesh, (uabs_diff(:,i)-uabs_diff(:,i-3)).*mask_vel, ax_all(1,i));
     %end
     hold on;
-    plot(GL2(:,1),GL2(:,2),'k','LineWidth',0.7);
-    plot(IM2(:,1),IM2(:,2),'k','LineWidth',0.7);
-    plot(basins_MEaSUREs(3).X,basins_MEaSUREs(3).Y,'LineWidth',0.7,'Color',palette_jfly(8,:)); % Brunt
-    plot(basins_MEaSUREs(4).X,basins_MEaSUREs(4).Y,'LineWidth',0.7,'Color',palette_jfly(4,:)); %R-LIS
-    plot(rock_outcrops.X,rock_outcrops.Y,'LineWidth',0.7,'color',[0.25, 0.25, 0.25],'linestyle',':');
-    plot(GL1(:,1),GL1(:,2),'LineWidth',0.8,'Color',palette_jfly(3,:),'linestyle','-.');
+    plot(GL2(:,1),GL2(:,2),'k','LineWidth',plot_line_width);
+    plot(IM2(:,1),IM2(:,2),'k','LineWidth',plot_line_width);
+    plot(basins_MEaSUREs(3).X,basins_MEaSUREs(3).Y,'LineWidth',plot_line_width,'Color',palette_jfly(8,:)); % Brunt
+    plot(basins_MEaSUREs(4).X,basins_MEaSUREs(4).Y,'LineWidth',plot_line_width,'Color',palette_jfly(4,:)); %R-LIS
+    plot(rock_outcrops.X,rock_outcrops.Y,'LineWidth',plot_line_width,'color',[0.25, 0.25, 0.25],'linestyle',':');
+    plot(GL1(:,1),GL1(:,2),'LineWidth',plot_line_width+0.1,'Color',palette_jfly(3,:),'linestyle','-.');
     %cptcmap('/Users/frre9931/Documents/PhD/ScientificColourMaps8/vik/vik.cpt'...
     %        ,'flip',true,'ncol',256);
     %clim([-500 500]);
@@ -122,11 +127,11 @@ for i = 1:nCols
 
     %cptcmap(colormaps.devon,'flip',false,'ncol',100);
     %clim([log10(1) log10(2000)]);
-    title(titles_name{i},'Interpreter','none','FontSize',10);
-    text(-7.8e5,2.13e6,letters_for_plots{i},'FontWeight','bold','FontSize',10);
+    title(titles_name{i},'Interpreter','none','FontSize',6);
+    text(-7.8e5,2.13e6,letters_for_plots{i},'FontWeight','bold','FontSize',8);
     %title(output_folder,'Interpreter','none');
     if i == 1
-        ylabel(plot_titles{1},'FontWeight','bold','FontSize',10);
+        ylabel(plot_titles{1},'FontWeight','bold','FontSize',6);
     end
 
     % % ===================
@@ -152,20 +157,20 @@ for i = 1:nCols
     %    plot_mesh_data_a_RLIS(mesh, (Hi_diff(:,i)-Hi_diff(:,i-3)).*maskHi_ROI, ax_all(2,i));
     %end
     hold on;
-    plot(GL2(:,1),GL2(:,2),'k','LineWidth',0.7);
-    plot(IM2(:,1),IM2(:,2),'k','LineWidth',0.7);
-    plot(basins_MEaSUREs(3).X,basins_MEaSUREs(3).Y,'LineWidth',0.7,'Color',palette_jfly(8,:)); % Brunt
-    plot(basins_MEaSUREs(4).X,basins_MEaSUREs(4).Y,'LineWidth',0.7,'Color',palette_jfly(4,:)); %R-LIS
-    plot(rock_outcrops.X,rock_outcrops.Y,'LineWidth',0.7,'color',[0.25, 0.25, 0.25],'linestyle',':');
-    plot(GL1(:,1),GL1(:,2),'LineWidth',0.8,'Color',palette_jfly(3,:),'linestyle','-.');
+    plot(GL2(:,1),GL2(:,2),'k','LineWidth',plot_line_width);
+    plot(IM2(:,1),IM2(:,2),'k','LineWidth',plot_line_width);
+    plot(basins_MEaSUREs(3).X,basins_MEaSUREs(3).Y,'LineWidth',plot_line_width,'Color',palette_jfly(8,:)); % Brunt
+    plot(basins_MEaSUREs(4).X,basins_MEaSUREs(4).Y,'LineWidth',plot_line_width,'Color',palette_jfly(4,:)); %R-LIS
+    plot(rock_outcrops.X,rock_outcrops.Y,'LineWidth',plot_line_width,'color',[0.25, 0.25, 0.25],'linestyle',':');
+    plot(GL1(:,1),GL1(:,2),'LineWidth',plot_line_width+0.1,'Color',palette_jfly(3,:),'linestyle','-.');
     %cptcmap('GMT_polar','flip',true,'ncol',100);
     cptcmap('/Users/frre9931/Documents/PhD/ScientificColourMaps8/vik/vik.cpt'...
             ,'flip',true,'ncol',256);
     clim([-500 500]);
-    xlabel('Eastings (m)','FontWeight','bold','FontSize',10)
-    text(-7.8e5,2.13e6,letters_for_plots{i+nCols},'FontWeight','bold','FontSize',10);
+    xlabel('Eastings (m)','FontWeight','bold','FontSize',6)
+    text(-7.8e5,2.13e6,letters_for_plots{i+nCols},'FontWeight','bold','FontSize',8);
     if i == 1
-        ylabel(plot_titles{2},'FontWeight','bold','FontSize',10);
+        ylabel(plot_titles{2},'FontWeight','bold','FontSize',6);
     end
 
     % % ===================
@@ -258,11 +263,11 @@ for r = 1:nRows
             %cb.Ticks = log10([1 10 50 100 500 1000 2000]);
             %cb.TickLabels = {'1','10','50','100','500','1000','2000'};
             cb.Label.String = 'Surface velocity difference (m a^{-1})';
-            cb.Label.FontSize = 10;
+            cb.Label.FontSize = 6;
         case 2
             %cb.Label.String = 'BMB (m/yr)';
             cb.Label.String = 'Ice thickness difference (m)';
-            cb.Label.FontSize = 10;
+            cb.Label.FontSize = 6;
             cb.Ticks = [-500:100:500];
             %cb.Label.String = 'Till friction angle (°)';
         case 3
@@ -274,5 +279,5 @@ for r = 1:nRows
 end
 
 %print(fig,'/Users/frre9931/Documents/PhD/ANT_UFEMISM/plots_ant/Riiser-Larsen/multipanel/multipanel_plot.png','-dpng','-r300');
-print(fig,'/Users/frre9931/Documents/PhD/ANT_UFEMISM/plots_ant/Riiser-Larsen/multipanel/multipanel_plot.pdf','-dpdf','-vector');
+print(fig,'/Users/frre9931/Documents/PhD/ANT_UFEMISM/plots_ant/Riiser-Larsen/multipanel/multipanel_Hb_OC+RT25_all.pdf','-dpdf','-vector');
 %exportgraphics(fig,'/Users/frre9931/Documents/PhD/ANT_UFEMISM/plots_ant/Riiser-Larsen/multipanel/multipanel_plot.pdf','ContentType','vector')

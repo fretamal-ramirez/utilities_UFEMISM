@@ -1,7 +1,8 @@
-function H = plot_mesh_data_b_RLIS(mesh, d, ax)
+function H = plot_mesh_data_b_RLIS(mesh, d, ax, font_size)
 % Plot UFEMISM mesh data (Riiser-Larsen region)
 % Optional input:
 %   ax — axes handle to plot into. If not provided, creates new figure.
+% font_size determine the size of font in plots
 
 % Plot range for Riiser-Larsen
 xmid = (-878893.0 + 131107.0)/2;
@@ -34,7 +35,7 @@ else
     H.Fig = ancestor(ax,'figure');
     H.Ax = ax;
     set(H.Ax,'XLim',[xmin,xmax],'YLim',[ymin,ymax],...
-        'XGrid','on','YGrid','on','Layer','top');
+        'XGrid','on','YGrid','on','Layer','top','FontSize',font_size);
 end
 
 % === Plot patch ===

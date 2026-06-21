@@ -16,6 +16,10 @@ titles_name = { ...
     'Observed', ...
     'Difference'
 };
+
+pageWidth  = 179;   % mm
+pageHeight = 254;   % mm
+
 tile_size = 300; % pixels for each panel
 nCols = 2;
 nRows = 3; % uabs, BMB, Hi_diff
@@ -213,7 +217,13 @@ fprintf('Ice velocity  = %.0f | %.0f | %.0f | %.0f\n', rmseU_in_basin_RLIS, rmse
 fprintf('Ice thickness = %.0f | %.0f | %.0f | %.0f\n', rmseHi_in_basin_RLIS, rmseHi_in_shelf_RLIS, rmseHi_in_basin_BIS, rmseHi_in_shelf_BIS);
 
 %% plot
-fig=figure('Units','pixels','Position',[100 100 fig_width+100 fig_height],'Visible','off');
+fig = figure('Visible','off');
+set(fig,'PaperUnits','centimeters');
+set(fig,'PaperSize',[17.9 25.4]);
+set(fig,'PaperPosition',[0 0 17.9 25.4]);
+%fig.Units = 'centimeters';
+%fig.Position = [10 10 pageWidth/10 pageHeight/10];
+%fig=figure('Units','pixels','Position',[100 100 fig_width+100 fig_height],'Visible','off');
 tiledlayout(nRows,nCols,"TileSpacing","compact","Padding","compact");
 
     % =================================
@@ -229,7 +239,7 @@ tiledlayout(nRows,nCols,"TileSpacing","compact","Padding","compact");
     cb=colorbar;
     cb.Ticks = log10([1 10 50 100 500 1000 2000]);
     cb.TickLabels = {'1','10','50','100','500','1000','2000'};
-    cb.Label.String = 'Velocity (m/yr)';
+    cb.Label.String = 'Velocity (m a^{-1})';
     cb.Label.FontSize = 12;
     ylabel('Northings (m)','FontWeight','bold');
     text(-7.8e5,2.13e6,'(a)','FontWeight','bold','FontSize',13);
@@ -252,7 +262,7 @@ tiledlayout(nRows,nCols,"TileSpacing","compact","Padding","compact");
         'XGrid','on','YGrid','on');
     box off
     cb=colorbar;    
-    cb.Label.String = 'Velocity difference (m/yr)';
+    cb.Label.String = 'Velocity difference (m a^{-1})';
     cb.Label.FontSize = 12;
     text(-7.8e5,2.13e6,'(b)','FontWeight','bold','FontSize',13);
     %text(-8e5,2.1e6,['RMSE',string(round(rmseU_in_ROI))]);
@@ -289,6 +299,7 @@ tiledlayout(nRows,nCols,"TileSpacing","compact","Padding","compact");
     clim([-500 500]);
     %text(-8e5,2.1e6,['RMSE',string(round(rmseH_in_ROI))]);
     cb=colorbar;
+    cb.Ticks = [-500:100:500];
     cb.Label.String = 'Ice thickness difference (m)';
     cb.Label.FontSize = 12;
     text(-7.8e5,2.13e6,'(d)','FontWeight','bold','FontSize',13);
@@ -300,7 +311,7 @@ tiledlayout(nRows,nCols,"TileSpacing","compact","Padding","compact");
     hold on;
     plot(GL2(:,1),GL2(:,2),'k','LineWidth',0.8);
     plot(IM2(:,1),IM2(:,2),'k','LineWidth',0.8);
-    plot(GL1(:,1),GL1(:,2),'LineWidth',0.8,'Color','green','linestyle','-.')
+    plot(GL1(:,1),GL1(:,2),'LineWidth',1.2,'Color','green','linestyle','-.')
     %colormap(ax_all(3,1),flip(parula));
     clim([0 2]);
     set(ax_all(3,1),'XLim',[x_ufe_min,x_ufe_max],'YLim',[y_ufe_min,y_ufe_max],...
@@ -308,7 +319,8 @@ tiledlayout(nRows,nCols,"TileSpacing","compact","Padding","compact");
     ylabel('Northings (m)','FontWeight','bold');
     xlabel('Eastings (m)','FontWeight','bold');
     cb=colorbar;
-    cb.Label.String = 'Basal melt rate (m/yr)';
+    cb.Ticks = [0,0.25,0.50,0.75,1.0,1.25,1.50,1.75,2.0];
+    cb.Label.String = 'Basal melt rate (m a^{-1})';
     cb.Label.FontSize = 12;
     text(-7.8e5,2.13e6,'(e)','FontWeight','bold','FontSize',13);
     % =================================
@@ -329,7 +341,8 @@ tiledlayout(nRows,nCols,"TileSpacing","compact","Padding","compact");
     clim([-5 5]);
     xlabel('Eastings (m)','FontWeight','bold');
     cb=colorbar;
-    cb.Label.String = 'Basal melt rate difference (m/yr)';
+    cb.Ticks = [-5:1:5];
+    cb.Label.String = 'Basal melt rate difference (m a^{-1})';
     cb.Label.FontSize = 12;
     text(-7.8e5,2.13e6,'(f)','FontWeight','bold','FontSize',13);
     print(fig,'/Users/frre9931/Documents/PhD/ANT_UFEMISM/plots_ant/Riiser-Larsen/multipanel/multipanel_test.png','-dpng','-r300');
