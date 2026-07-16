@@ -4,7 +4,7 @@
 # I have not checked the modules! job to be done, compare with Tim's code
 module purge
 module load buildenv-gcc/2025b-eb
-module load netCDF/4.9.3 #netCDF-HDF5/4.9.2-1.12.2-hpc1
+module load netCDF-Fortran/4.6.2 #netCDF-HDF5/4.9.2-1.12.2-hpc1
 module load METIS/5.1.0 
 module load CMake/3.31.8 Ninja/1.13.0 HDF5/1.14.6
 # this modules I are needed and being loaded by buildenv-gcc/2025b-eb
@@ -18,7 +18,7 @@ export LD_LIBRARY_PATH=$PETSC_DIR/lib:$LD_LIBRARY_PATH
 export PKG_CONFIG_PATH=$PETSC_DIR/lib/pkgconfig:$PKG_CONFIG_PATH
 
 # Set NetCDF directory from the module information
-export NETCDF_DIR=/software/sse2/el9_epyc9005/easybuild/prefix/software/netCDF/4.9.3-gompi-2025b
+export NETCDF_DIR=/software/sse2/el9_epyc9005/easybuild/prefix/software/netCDF-Fortran/4.6.2-gompi-2025b
 export NETCDF_INC=${NETCDF_DIR}/include
 export NETCDF_LIB=${NETCDF_DIR}/lib
 
