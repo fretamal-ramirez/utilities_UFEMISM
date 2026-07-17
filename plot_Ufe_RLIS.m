@@ -2,7 +2,12 @@
 clear all; clc;
 
 %========= PATH TO OUTPUT UFEMISM DIRECTORY ==========
-output_folder = 'results_ant_PD_inversion_dHdt_init_R-LIS_gamma99_PMP_roughness_M11_Hb-1500to0m_SHR';
+output_folder = 'results_ant_PD_inversion_dHdt_init_R-LIS_gamma99_PMP_roughness_M11_Hb-2000to-250m_SHR';
+%output_folder = 'results_ant_PD_maxphi_Hb-2000to-250m_SHR_retreat';
+%output_folder = 'results_ant_PD_inversion_dHdt_init_R-LIS_gamma99_PMP_roughness_max30_SHR_new';
+%output_folder = 'results_ant_PD_inversion_dHdt_init_R-LIS_gamma99_PMP_roughness_max30_SHR';
+output_folder = 'results_ant_PD_maxphi_30_SHR_retreat';
+%output_folder = 'results_ant_PD_maxphi_30_SHR_ctrl2500_ocndT_2e1';
 %ufe_folder_path=['/Users/frre9931/Desktop/UFEMISM2.0_main/UFEMISM2.0/', output_folder];
 %ufe_folder_path=['/Users/frre9931/Desktop/UFEMISM2.0_porting/', output_folder];
 ufe_folder_path=['/Users/frre9931/Desktop/tetralith_results/', output_folder];
@@ -108,6 +113,7 @@ if allow_plot_mesh
         hold off
     end    
 end
+
 %% add plots with Voronois cells
 mesh_first.SMB            = ncread( mesh_path_first,'SMB');
 mesh_first.Hi            = ncread( mesh_path_first,'Hi');
@@ -253,6 +259,8 @@ if allow_plot_mesh
         plot(IM_mesh2(:,1),IM_mesh2(:,2),'LineWidth',2,'Color','black');
         plot(GL_mesh2(:,1),GL_mesh2(:,2),'LineWidth',2,'Color','red');
         cptcmap('GMT_polar','flip',true,'ncol',100);
+        %cptcmap('/Users/frre9931/Documents/PhD/ScientificColourMaps8/vik/vik.cpt'...
+        %    ,'flip',false,'ncol',256);
         clim([-2 2]);
         if allow_save_plots
           print([path_save,output_folder,'_mesh_2_BMB_tf'],'-dpng','-r300')
@@ -266,6 +274,8 @@ if allow_plot_mesh
             '-.');
         %plot(IM(:,1),IM(:,2),'LineWidth',2,'Color','red','LineStyle','--');
         cptcmap('GMT_polar','flip',true,'ncol',100);
+        %cptcmap('/Users/frre9931/Documents/PhD/ScientificColourMaps8/vik/vik.cpt'...
+        %    ,'flip',false,'ncol',256);
         clim([-2 2]);
         t=title([output_folder,' tf'],'Interpreter','none');
         t.Units='normalized';
@@ -330,7 +340,10 @@ if allow_plot_mesh
     hold on
     %cptcmap('/Users/frre9931/Documents/PhD/ScientificColourMaps8/bukavu/bukavu.cpt'...
     %        ,'flip',false,'ncol',100);
-    colorbar;
+    xlabel('Eastings (m)','FontWeight','bold');
+    ylabel('Northings (m)','FontWeight','bold')
+    cc=colorbar;
+    cc.Label.String = 'Till friction angle (°)';
     plot(GL2(:,1),GL2(:,2),'LineWidth',2,'Color','black');
     plot(IM2(:,1),IM2(:,2),'LineWidth',2,'Color','black');
     t=title([output_folder,' till friction angle'],'Interpreter','none');
@@ -400,4 +413,94 @@ hold on
 plot(IM2(:,1),IM2(:,2),'LineWidth',2,'Color','black');
 
 
+%% extract data from GL and export it as a .shp to GIS
+S = struct([]);
+k = 1;
+i = 1;
 
+while i <= size(GL,1)
+
+    % Skip rows that are entirely NaN
+    if isnan(GL(i,1))
+        i = i + 1;
+        continue
+    end
+
+    n = GL(i,1);
+
+    % Make sure this is actually an integer number of points
+    if n < 2 || mod(n,1)~=0
+        i = i + 1;
+        continue
+    end
+
+    % Check we don't run past the end of the array
+    if i+n > size(GL,1)
+        break
+    end
+
+    x = GL(i+1:i+n,1);
+    y = GL(i+1:i+n,2);
+
+    % Remove accidental NaNs inside the segment
+    valid = isfinite(x) & isfinite(y);
+    x = x(valid);
+    y = y(valid);
+
+    if numel(x) >= 2
+        S(k).Geometry = 'Line';
+        S(k).X = x';
+        S(k).Y = y';
+        k = k + 1;
+    end
+
+    i = i + n + 1;
+
+end
+shapewrite(S,[ufe_folder_path,'/grounding_line_t0.shp'])
+
+% repeat for GL2
+S = struct([]);
+k = 1;
+i = 1;
+
+while i <= size(GL2,1)
+
+    % Skip rows that are entirely NaN
+    if isnan(GL2(i,1))
+        i = i + 1;
+        continue
+    end
+
+    n = GL2(i,1);
+
+    % Make sure this is actually an integer number of points
+    if n < 2 || mod(n,1)~=0
+        i = i + 1;
+        continue
+    end
+
+    % Check we don't run past the end of the array
+    if i+n > size(GL2,1)
+        break
+    end
+
+    x = GL2(i+1:i+n,1);
+    y = GL2(i+1:i+n,2);
+
+    % Remove accidental NaNs inside the segment
+    valid = isfinite(x) & isfinite(y);
+    x = x(valid);
+    y = y(valid);
+
+    if numel(x) >= 2
+        S(k).Geometry = 'Line';
+        S(k).X = x';
+        S(k).Y = y';
+        k = k + 1;
+    end
+
+    i = i + n + 1;
+
+end
+shapewrite(S,[ufe_folder_path,'/grounding_line_tf.shp'])

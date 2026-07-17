@@ -4,20 +4,20 @@ clear all; close all; clc;
 % ==== DEFINE OUTPUTS ====
 outputs = { ...
     %'results_ant_PD_maxphi_30_SHR_ctrl2500',...
-    'results_ant_PD_maxphi_30_SHR_ctrl2500_new',...
-    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_ctrl2500',...
-    %'results_ant_PD_maxphi_30_SHR_retreat',...
-    'results_ant_PD_maxphi_30_SHR_retreat_new',...
-    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_retreat',...
+    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_gradualRT_25km_ocndT_pw2_rt_4e-3_max_2e1',...
+    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_gradualRT_25km_ocndT_rt_4e-3_max_2e1',...
+    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_gradualRT_25km_ocndT_pw2_rt_8e-3_max_2e1',...
+    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_gradualRT_25km_ocndT_rt_8e-3_max_2e1',...
+    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_gradualRT_25km_ocndT_2e1',...
 };
 
 titles_name = { ...
     %'control', ...
-    'control', ...
-    'control Hb-2000to-250m', ...
-    %'no-shelf', ...
-    'no-shelf', ...
-    'no-shelf Hb-2000to-250m',...
+    'PW4e-3 + RT25', ...
+    'LR4e-3 + RT25', ...
+    'PW8e-3 + RT25', ...
+    'LR8e-3 + RT25', ...
+    'OC+2.0 + RT25', ...
 };
 
 % ==== TIME SETTINGS ====
@@ -33,6 +33,7 @@ fig_height = tile_size * nRows;
 
 % ==== PATHS ====
 basepath = '/Users/frre9931/Desktop/tetralith_results/';
+basepath = '/Volumes/One Touch/results_UFEMISM/tetralith_results/outputs/';
 
 path(path,genpath('/Users/frre9931/Desktop/UFEMISM2.0_main/UFEMISM2.0/tools/matlab'));
 path(path,genpath('/Users/frre9931/Documents/PhD/cptcmap-pkg/cptcmap'));
@@ -40,9 +41,10 @@ path(path,genpath('/Users/frre9931/Documents/PhD/cptcmap-pkg/cptcmap'));
 rock_outcrops = shaperead('/Users/frre9931/Documents/PhD/RiiserLarsen/ADD_RockOutcrops_RLIS.shp');
 
 % ==== VIDEO SETUP ====
-video_name = '/Users/frre9931/Documents/PhD/ANT_UFEMISM/plots_ant/Riiser-Larsen/multipanel/Velocity_Hi_diff_100yr.mp4';
+video_name = '/Users/frre9931/Documents/PhD/ANT_UFEMISM/plots_ant/Riiser-Larsen/multipanel/Velocity_Hi_diff_50yr.mp4';
 v = VideoWriter(video_name,'MPEG-4');
 v.FrameRate = 1;
+v.Quality = 100;
 open(v);
 
 % ==== CREATE FIGURE ====
@@ -107,6 +109,7 @@ for t = 1:length(time_indices)
 
         nE = size(mesh.E,1);
         GLt = ncread(filepath,'grounding_line',[1,1,tid],[nE,2,1]);
+        GL1 = ncread(filepath,'grounding_line',[1,1,1],[nE,2,1]);
         IMt = ncread(filepath,'ice_margin',[1,1,tid],[nE,2,1]);
 
         % ===================================================
@@ -120,6 +123,7 @@ for t = 1:length(time_indices)
         hold on;
 
         plot(GLt(:,1),GLt(:,2),'k','LineWidth',0.8);
+        plot(GL1(:,1),GL1(:,2),'g','LineWidth',0.8);
         plot(IMt(:,1),IMt(:,2),'k','LineWidth',0.8);
         plot(rock_outcrops.X,rock_outcrops.Y,'LineWidth',0.8,'color',[0.25 0.25 0.25]);
 
@@ -145,6 +149,7 @@ for t = 1:length(time_indices)
         hold on;
 
         plot(GLt(:,1),GLt(:,2),'k','LineWidth',0.8);
+        plot(GL1(:,1),GL1(:,2),'g','LineWidth',0.8);
         plot(IMt(:,1),IMt(:,2),'k','LineWidth',0.8);
         plot(rock_outcrops.X,rock_outcrops.Y,'LineWidth',0.8,'color',[0.25 0.25 0.25]);
 
@@ -185,9 +190,14 @@ for t = 1:length(time_indices)
             'FontSize',14,'FontWeight','bold');
 
     drawnow
+    tmpfile = 'frame_tmp.png';
 
-    frame = getframe(fig);
-    writeVideo(v,frame);
+    exportgraphics(fig,tmpfile,'Resolution',300)
+
+    img = imread(tmpfile);
+
+    writeVideo(v,img);
+
 
 end
 

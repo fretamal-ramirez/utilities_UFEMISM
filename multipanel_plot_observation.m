@@ -19,6 +19,7 @@ titles_name = { ...
 
 pageWidth  = 179;   % mm
 pageHeight = 254;   % mm
+plot_font_size = 10;
 
 tile_size = 300; % pixels for each panel
 nCols = 2;
@@ -219,8 +220,8 @@ fprintf('Ice thickness = %.0f | %.0f | %.0f | %.0f\n', rmseHi_in_basin_RLIS, rms
 %% plot
 fig = figure('Visible','off');
 set(fig,'PaperUnits','centimeters');
-set(fig,'PaperSize',[17.9 25.4]);
-set(fig,'PaperPosition',[0 0 17.9 25.4]);
+set(fig,'PaperSize',[16.9 21.5]); %17.9 and 23.5 was too big
+set(fig,'PaperPosition',[0 0 16.9 21.5]);
 %fig.Units = 'centimeters';
 %fig.Position = [10 10 pageWidth/10 pageHeight/10];
 %fig=figure('Units','pixels','Position',[100 100 fig_width+100 fig_height],'Visible','off');
@@ -230,7 +231,7 @@ tiledlayout(nRows,nCols,"TileSpacing","compact","Padding","compact");
     % --- 1,1 VELOCITY ROW IN MESH ---
     % =================================
     ax_all(1,1) = nexttile(1); % row 1
-    plot_mesh_data_b_RLIS(mesh, log10(mesh.uabs(:,end)), ax_all(1,1));
+    plot_mesh_data_b_RLIS(mesh, log10(mesh.uabs(:,end)), ax_all(1,1),plot_font_size);
     hold on;
     plot(GL2(:,1),GL2(:,2),'k','LineWidth',0.8);
     plot(IM2(:,1),IM2(:,2),'k','LineWidth',0.8);
@@ -248,11 +249,12 @@ tiledlayout(nRows,nCols,"TileSpacing","compact","Padding","compact");
     % --- 1,2 VELOCITY DIFF ---
     % =================================
     ax_all(1,2) = nexttile(2); % row 1
-    contourf(x_ufe,y_ufe,uabs_diff,100,'LineColor','none');
+    %contourf(x_ufe,y_ufe,uabs_diff,50,'LineColor','none','EdgeColor','none');
     %contourf(x_ufe,y_ufe,diff_uabs_in_ROI,100,'LineColor','none');
+    h=imagesc(x_ufe,y_ufe,uabs_diff);
     hold on;
-    plot(basins_MEaSUREs(4).X,basins_MEaSUREs(4).Y,'LineWidth',2,'Color','black'); %R-LIS
-    plot(basins_MEaSUREs(3).X,basins_MEaSUREs(3).Y,'LineWidth',2,'Color','black'); % Brunt
+    plot(basins_MEaSUREs(4).X,basins_MEaSUREs(4).Y,'LineWidth',0.8,'Color','black'); %R-LIS it was in 2.0 before
+    plot(basins_MEaSUREs(3).X,basins_MEaSUREs(3).Y,'LineWidth',0.8,'Color','black'); % Brunt
     plot(iceshelves_MEaSUREs(37).X,iceshelves_MEaSUREs(37).Y,'LineWidth',0.8,'Color','black'); %R-LIS
     plot(iceshelves_MEaSUREs(36).X,iceshelves_MEaSUREs(36).Y,'LineWidth',0.8,'Color','black'); % Brunt
     cptcmap('/Users/frre9931/Documents/PhD/ScientificColourMaps8/vik/vik.cpt'...
@@ -261,6 +263,7 @@ tiledlayout(nRows,nCols,"TileSpacing","compact","Padding","compact");
     set(ax_all(1,2),'XLim',[x_ufe_min,x_ufe_max],'YLim',[y_ufe_min,y_ufe_max],...
         'XGrid','on','YGrid','on');
     box off
+    set(h,'AlphaData', ~isnan(uabs_diff)); axis xy; % make NaN transparent and flip image
     cb=colorbar;    
     cb.Label.String = 'Velocity difference (m a^{-1})';
     cb.Label.FontSize = 12;
@@ -270,7 +273,7 @@ tiledlayout(nRows,nCols,"TileSpacing","compact","Padding","compact");
     % --- 2,1 Hi RLIS IN MESH ---
     % =================================
     ax_all(2,1) = nexttile(3); % row 3
-    plot_mesh_data_a_RLIS(mesh, mesh.Hi(:,end).*maskHi0(:,end), ax_all(2,1));
+    plot_mesh_data_a_RLIS(mesh, mesh.Hi(:,end).*maskHi0(:,end), ax_all(2,1),plot_font_size);
     hold on;
     plot(GL2(:,1),GL2(:,2),'k','LineWidth',0.8);
     plot(IM2(:,1),IM2(:,2),'k','LineWidth',0.8);
@@ -285,12 +288,12 @@ tiledlayout(nRows,nCols,"TileSpacing","compact","Padding","compact");
     % --- 2,2 Hi DIFF RLIS IN MESH ---
     % =================================
     ax_all(2,2) = nexttile(4); % row 3
-    plot_mesh_data_a_RLIS(mesh, mesh.Hi_diff(:,1).*maskHi0(:,end), ax_all(2,2));
+    plot_mesh_data_a_RLIS(mesh, mesh.Hi_diff(:,1).*maskHi0(:,end), ax_all(2,2),plot_font_size);
     %plot_mesh_data_a_RLIS(mesh, Hi_diff_in_basin_RLIS, ax_all(2,2));
     hold on;
     plot(GL2(:,1),GL2(:,2),'k','LineWidth',0.8);
     %plot(IM2(:,1),IM2(:,2),'k','LineWidth',0.8);
-    plot(rock_outcrops.X,rock_outcrops.Y,'LineWidth',0.8,'color',[0.25, 0.25, 0.25]);
+    plot(rock_outcrops.X,rock_outcrops.Y,'LineWidth',0.6,'color',[0.25, 0.25, 0.25]); % it was 0.8
     plot(basins_MEaSUREs(4).X,basins_MEaSUREs(4).Y,'LineWidth',0.8,'Color','black'); %R-LIS
     plot(basins_MEaSUREs(3).X,basins_MEaSUREs(3).Y,'LineWidth',0.8,'Color','black'); % Brunt
     plot(iceshelves_MEaSUREs(37).X,iceshelves_MEaSUREs(37).Y,'LineWidth',0.8,'Color','black'); %R-LIS
@@ -307,7 +310,7 @@ tiledlayout(nRows,nCols,"TileSpacing","compact","Padding","compact");
     % --- 3,1 BMB RLIS IN MESH ---
     % =================================
     ax_all(3,1) = nexttile(5); % row 2
-    plot_mesh_data_a_RLIS(mesh, mesh.BMB(:,end)*-1, ax_all(3,1));
+    plot_mesh_data_a_RLIS(mesh, mesh.BMB(:,end)*-1, ax_all(3,1),plot_font_size);
     hold on;
     plot(GL2(:,1),GL2(:,2),'k','LineWidth',0.8);
     plot(IM2(:,1),IM2(:,2),'k','LineWidth',0.8);
@@ -328,16 +331,18 @@ tiledlayout(nRows,nCols,"TileSpacing","compact","Padding","compact");
     % =================================
     ax_all(3,2) = nexttile(6); % row 1
     %rmseBMB=rmse(uabs_measures_interp,(uabs_ufe(:,:,end).*maskHi0_ufe(:,:,end))','all','omitnan');
-    contourf(x_ufe,y_ufe,bmb_diff,100,'LineColor','none');
+    %contourf(x_ufe,y_ufe,bmb_diff,100,'LineColor','none');
+    h=imagesc(x_ufe,y_ufe,bmb_diff);
     hold on;
-    plot(basins_MEaSUREs(4).X,basins_MEaSUREs(4).Y,'LineWidth',2,'Color','black'); %R-LIS
-    plot(basins_MEaSUREs(3).X,basins_MEaSUREs(3).Y,'LineWidth',2,'Color','black'); % Brunt
+    plot(basins_MEaSUREs(4).X,basins_MEaSUREs(4).Y,'LineWidth',0.8,'Color','black'); %R-LIS
+    plot(basins_MEaSUREs(3).X,basins_MEaSUREs(3).Y,'LineWidth',0.8,'Color','black'); % Brunt
     plot(GL2(:,1),GL2(:,2),'k','LineWidth',0.8);
     plot(IM2(:,1),IM2(:,2),'k','LineWidth',0.8);
     cptcmap('GMT_polar','flip',false,'ncol',100);
     set(ax_all(3,2),'XLim',[x_ufe_min,x_ufe_max],'YLim',[y_ufe_min,y_ufe_max],...
         'XGrid','on','YGrid','on');
     box off
+    set(h,'AlphaData', ~isnan(bmb_diff)); axis xy; % make NaN transparent and flip image
     clim([-5 5]);
     xlabel('Eastings (m)','FontWeight','bold');
     cb=colorbar;
@@ -345,7 +350,8 @@ tiledlayout(nRows,nCols,"TileSpacing","compact","Padding","compact");
     cb.Label.String = 'Basal melt rate difference (m a^{-1})';
     cb.Label.FontSize = 12;
     text(-7.8e5,2.13e6,'(f)','FontWeight','bold','FontSize',13);
-    print(fig,'/Users/frre9931/Documents/PhD/ANT_UFEMISM/plots_ant/Riiser-Larsen/multipanel/multipanel_test.png','-dpng','-r300');
+    %print(fig,'/Users/frre9931/Documents/PhD/ANT_UFEMISM/plots_ant/Riiser-Larsen/multipanel/multipanel_test.png','-dpng','-r300');
+    print(fig,'/Users/frre9931/Documents/PhD/ANT_UFEMISM/plots_ant/Riiser-Larsen/multipanel/multipanel_test.pdf','-dpdf','-vector');
 %%
 for i = 1:nCols
     output_folder = outputs{i};

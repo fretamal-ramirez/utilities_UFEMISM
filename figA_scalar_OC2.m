@@ -1,51 +1,3 @@
-% plot ice volumes
-path_init='/Users/frre9931/Desktop/tetralith_results/results_ant_PD_inversion_dHdt_init_R-LIS_gamma20_FCMP/scalar_output_ANT_00001.nc';
-path_PD='/Users/frre9931/Desktop/tetralith_results/results_ant_PD_control5000_FCMP/scalar_output_ANT_00001.nc';
-%path_PD='/Users/frre9931/Desktop/UFEMISM2.0_porting/results_ant_PD_control5000_PMP/scalar_output_ANT_00001.nc'; 
-
-ice_volume_init=ncread(path_init,'ice_volume');
-ice_volume_af_init=ncread(path_init,'ice_volume_af');
-time_init=ncread(path_init,'time');
-
-ice_volume_PD=ncread(path_PD,'ice_volume');
-ice_volume_af_PD=ncread(path_PD,'ice_volume_af');
-time_PD=ncread(path_PD,'time');
-
-% convert PD time starting from 1980 to 50,000 to plot both together
-starting_yr=time_init(end);
-yrs_of_PD_simulation=time_PD(end)-time_PD(1);
-yrs_continued=linspace(starting_yr,starting_yr+yrs_of_PD_simulation,length(time_PD))';
-
-% plot
-figure()
-plot(time_init,ice_volume_af_init,yrs_continued,ice_volume_af_PD,'LineWidth',2);
-grid on
-xlabel('time (yrs)');
-ylabel('ice volume af');
-title('Simulation using FCMP')
-% 
-% figure()
-% plot(time_init,ice_volume_init,yrs_continued,ice_volume_PD,'LineWidth',2);
-% grid on
-% xlabel('time (yrs)');
-% ylabel('ice volume');
-
-%% something similar but now to calculate the volume_af difference between control and retreat
-folder_ctrl='results_ant_PD_maxphi_Hb-2000to-250m_SHR_ctrl2500';
-folder_run='results_ant_PD_maxphi_Hb-2000to-250m_SHR_retreat';
-%path_ctrl = '/Users/frre9931/Desktop/tetralith_results/results_ant_PD_maxphi_20_ctrl2500_SMB_and_phi_50percent/scalar_output_ANT_00001.nc';
-path_ctrl = ['/Users/frre9931/Desktop/tetralith_results/',folder_ctrl,'/scalar_output_ANT_00001.nc'];
-path_run  = ['/Users/frre9931/Desktop/tetralith_results/',folder_run,'/scalar_output_ANT_00001.nc'];
-PD_SL = 55.7; % extracted from UFEMISM output ice_volume_af_PD
-
-ice_volume_ctrl=ncread(path_ctrl,'ice_volume');
-ice_volume_af_ctrl=ncread(path_ctrl,'ice_volume_af');
-
-ice_volume_run=ncread(path_run,'ice_volume');
-ice_volume_af_run=ncread(path_run,'ice_volume_af');
-
-final_sea_level_contribution = ice_volume_af_ctrl(end) - ice_volume_af_run(end);
-
 %% plot using time series of every simulation
 % the time-step is not the same in all simulations, this means that we need
 % to plot each of them with their relative time.
@@ -55,23 +7,28 @@ final_sea_level_contribution = ice_volume_af_ctrl(end) - ice_volume_af_run(end);
 
 % ==== DEFINE OUTPUTS ====
 outputs = { ...   
+    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_ctrl2500_ocndT_2e1',...
     'results_ant_PD_maxphi_Hb-2000to-250m_SHR_ctrl2500_ocndT_rt_4e-3_max_2e1',...
     'results_ant_PD_maxphi_Hb-2000to-250m_SHR_ctrl2500_ocndT_pw2_rt_4e-3_max_2e1',...
     'results_ant_PD_maxphi_Hb-2000to-250m_SHR_ctrl2500_ocndT_rt_8e-3_max_2e1',...
     'results_ant_PD_maxphi_Hb-2000to-250m_SHR_ctrl2500_ocndT_pw2_rt_8e-3_max_2e1',...
-    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_ctrl2500_ocndT_2e1',...
+    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_gradualRT_25km_ocndT_2e1',...
     'results_ant_PD_maxphi_Hb-2000to-250m_SHR_gradualRT_25km_ocndT_rt_4e-3_max_2e1',...
     'results_ant_PD_maxphi_Hb-2000to-250m_SHR_gradualRT_25km_ocndT_pw2_rt_4e-3_max_2e1',...
     'results_ant_PD_maxphi_Hb-2000to-250m_SHR_gradualRT_25km_ocndT_rt_8e-3_max_2e1',...
     'results_ant_PD_maxphi_Hb-2000to-250m_SHR_gradualRT_25km_ocndT_pw2_rt_8e-3_max_2e1',...
-    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_gradualRT_25km_ocndT_2e1',...
+    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_retreat_ocndT_2e1',...
+    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_retreat_ocndT_rt_4e-3_max_2e1',...
+    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_retreat_ocndT_pw2_rt_4e-3_max_2e1',...
+    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_retreat_ocndT_rt_8e-3_max_2e1',...
+    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_retreat_ocndT_pw2_rt_8e-3_max_2e1',...
 };
 legend_name = { ...
+    'OC 2.0',...
     'LR4e-3',...
     'PW4e-3',...
     'LR8e-3',...
     'PW8e-3',...
-    'OC 2.0',...
 };
 % add simulation for PD ctrl
 folder_ctrl={ ...
@@ -84,16 +41,12 @@ basepath = '/Volumes/One Touch/results_UFEMISM/tetralith_results/outputs/';
 PD_SL = 55.7; 
 
 % figure config
-fig_width  = 500;
-fig_height = 300;
-
-% figure config
 fig_width  = 17.9; % 179 mm, two columns JOG
 fig_height = 10.0; % 254 mm maximum height JOG
 
 % limits for plot
 xmin=2000; xmax=2500;
-ymin=-5; ymax=30; % 350 it was before
+ymin=0; ymax=50; % 350 it was before
 
 %
 plotcase = 'ctrl'; % could be ctrl or init
@@ -104,29 +57,6 @@ H.fig = figure('Visible','off');
 set(H.fig,'PaperUnits','centimeters');
 set(H.fig,'PaperSize',[fig_width fig_height]);
 set(H.fig,'PaperPosition',[0 0 fig_width fig_height]);
-
-%set colors inspired in ColorBrewer
-colors = [27 158 119;
-    217 95 2;
-    117 112 179;
-    231 41 138;
-    102 166 30;
-    230 171 2;
-    166 118 29;
-    102 102 102] / 255;
-
-% try this colors. https://jfly.uni-koeln.de/color/#cudo
-PALETTE4 = [
-    230 159   0;
-    128   0 128;
-    240 228  66;
-      0 114 178;
-    213  94   0;
-     86 180 233;
-    143  72   0;
-      0 158 115;
-    204 121 167
-] / 255;
 
 palette_jfly = [
     102 102 102;
@@ -186,8 +116,10 @@ for i=1:length(outputs)
     % plot time series, *1000 to show it in mm instead of meters
     if i <= plots_with_same_style % it was set to 8 before
         plot(time_ctrl, SLC_respect_ctrl*1000,'LineWidth',2,'Color',palette_jfly(i,:))
+    elseif i <= plots_with_same_style*2
+        plot(time_ctrl, SLC_respect_ctrl*1000,'LineWidth',2,'Marker','o','Color',palette_jfly(i-plots_with_same_style,:),'MarkerIndices',1:100:length(time_ctrl),'MarkerFaceColor',palette_jfly(i-plots_with_same_style,:))
     else
-        plot(time_ctrl, SLC_respect_ctrl*1000,'LineWidth',2,'LineStyle','--','Color',palette_jfly(i-plots_with_same_style,:))
+        plot(time_ctrl, SLC_respect_ctrl*1000,'LineWidth',2,'Marker','^','Color',palette_jfly(i-plots_with_same_style*2,:),'MarkerIndices',1:100:length(time_ctrl),'MarkerFaceColor',palette_jfly(i-plots_with_same_style*2,:))
     end
     otherwise
             disp('unknown plot case');
@@ -219,18 +151,17 @@ lgd_exp.AutoUpdate = 'off';
 ax = gca;
 pos = ax.Position;
 
-ax2 = axes('Position',[pos(1)+0.29 pos(2)+0.73 0.07 0.05]);
-plot([0 1],[0.7 0.7],'k-','LineWidth',2); hold on
-plot([0 1],[0.3 0.3],'k--','LineWidth',2)
+ax2 = axes('Position',[pos(1)+0.29 pos(2)+0.70 0.07 0.1]);
+plot([0 1],[0.7 0.7],'k','LineWidth',2); hold on
+plot([0 0+1/2 1],[-4 -4 -4],'-o','LineWidth',2,'MarkerIndices',2,'Color','black','MarkerFaceColor','black')
+plot([0 0+1/2 1],[-9 -9 -9],'-^','LineWidth',2,'MarkerIndices',2,'Color','black','MarkerFaceColor','black')
 
 %text(1.1,0.7,'Hb capped','FontSize',10)
 %text(1.1,0.3,'standard','FontSize',10)
 text(1.1,0.7,'OC','FontSize',10)
-text(1.1,0.3,'OC + RT25','FontSize',10)
-
+text(1.1,-4,'OC + RT25','FontSize',10)
+text(1.1,-9,'OC + NS','FontSize',10)
 axis off
 
 %==========================================
-print(H.fig,'/Users/frre9931/Documents/PhD/ANT_UFEMISM/plots_ant/Riiser-Larsen/multipanel/scalarSLE.pdf','-dpdf','-vector');
-
-%% load dT forcings to create an extra figure with all the dT's
+print(H.fig,'/Users/frre9931/Documents/PhD/ANT_UFEMISM/plots_ant/Riiser-Larsen/multipanel/scalarSLE_OC2.pdf','-dpdf','-vector');

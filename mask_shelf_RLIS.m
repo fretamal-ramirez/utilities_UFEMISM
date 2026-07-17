@@ -411,3 +411,108 @@ netcdf.putVar(ncid,id_mask,permute(mask_final,[2,1]));
 % ==========
 
 netcdf.close(ncid);
+
+%% save the file as a GeoTiff data
+
+xMin = min(x);
+xMax = max(x);
+yMin = min(y);
+yMax = max(y);
+
+% Create spatial referencing object
+R = maprefcells([xMin xMax], [yMin yMax], size(mask_final));
+
+% Antarctic stereographic projection
+crs = 3031;
+
+filename = '/Users/frre9931/Documents/PhD/RiiserLarsen/mask_ocean_calving_bedmachine_2km.tif';
+
+geotiffwrite(filename, mask_final, R, ...
+    'CoordRefSysCode', crs);
+
+%% Do something similar for Bedmap3 at 2km resolution
+% create a mask at 2km.
+bedmap3_hi=ncread('/Users/frre9931/Documents/PhD/Bedmap3_2km/bedmap3_2km.nc','ice_thickness');
+bedmap3_x=ncread('/Users/frre9931/Documents/PhD/Bedmap3_2km/bedmap3_2km.nc','x');
+bedmap3_y=ncread('/Users/frre9931/Documents/PhD/Bedmap3_2km/bedmap3_2km.nc','y');
+
+% use the bounding box to create a square grid of x and y
+grid_res=2000; % km
+
+boundingBox=[min(bedmap3_x),min(bedmap3_y);
+    max(bedmap3_x),max(bedmap3_y)];
+
+x=boundingBox(1,1):grid_res:boundingBox(2,1);
+y=boundingBox(1,2):grid_res:boundingBox(2,2);
+[x_grid,y_grid]=meshgrid(x,y);
+
+bedmap_mask=zeros(size(bedmap3_hi));
+for i= 1:size(bedmap3_hi,1)
+    for j=1:size(bedmap3_hi,2)
+        if bedmap3_hi(i,j)>0
+            bedmap_mask(i,j)=1;
+        end
+    end
+end
+
+mask_outgrid=interp2(double(bedmap3_x),double(bedmap3_y),double(bedmap_mask)',x_grid,y_grid);
+figure()
+contourf(x_grid,y_grid,mask_outgrid)
+
+mask_filled = imfill(mask_outgrid > 0, 'holes'); % fill holes in the binary mask
+mask_final = ones(size(mask_filled)).*~mask_filled;
+
+figure()
+contourf(x_grid,y_grid,mask_final)
+
+%%
+% create netcdf file
+ncid = netcdf.create('/Users/frre9931/Documents/PhD/Bedmap3_2km/mask_ocean_calving_bedmap3_2km.nc','CLOBBER');
+
+% Define dimensions
+% =================
+
+dim_x = netcdf.defDim(ncid,'x',size(x,2));
+dim_y = netcdf.defDim(ncid,'y',size(y,2));
+%dim_time = netcdf.defDim(ncid,'time',size(faketime,2));
+
+% Define variables
+% ================
+
+id_x = netcdf.defVar(ncid,'x','double',dim_x);
+id_y = netcdf.defVar(ncid,'y','double',dim_y);
+%id_time = netcdf.defVar(ncid,'time','double',dim_time);
+
+id_mask  = netcdf.defVar(ncid,'mask','double',[dim_x, dim_y]);
+
+% Add information to variables
+% ==================
+
+netcdf.putAtt(ncid,id_x,'standard_name','x-axis distance from center of projection'); 
+netcdf.putAtt(ncid,id_x,'units','m'); 
+netcdf.putAtt(ncid,id_y,'standard_name','y-axis distance from center of projection');
+netcdf.putAtt(ncid,id_y,'units','m'); 
+%netcdf.putAtt(ncid,id_time,'standard_name','time');
+%netcdf.putAtt(ncid,id_time,'units','years');
+
+netcdf.putAtt(ncid,id_mask,'standard_name','mask'); 
+netcdf.putAtt(ncid,id_mask,'units','unitless');
+
+% End definition mode
+% ===================
+
+netcdf.endDef(ncid)
+
+% Save data
+% =========
+
+netcdf.putVar(ncid,id_x,x);
+netcdf.putVar(ncid,id_y,y);
+%netcdf.putVar(ncid,id_time,faketime);
+
+netcdf.putVar(ncid,id_mask,permute(mask_final,[2,1]));
+
+% Close file
+% ==========
+
+netcdf.close(ncid);
