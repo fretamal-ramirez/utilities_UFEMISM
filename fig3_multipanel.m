@@ -3,9 +3,9 @@ clear all; close all; clc;
 
 % ==== DEFINE OUTPUTS ====
 outputs = { ...
-    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_ctrl2500_ocndT_5e-1',...
-    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_ctrl2500_ocndT_1e1',...
-    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_ctrl2500_ocndT_2e1',...
+    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_ctrl2500_ocndT_5e-1_N',...
+    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_ctrl2500_ocndT_1e1_N',...
+    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_ctrl2500_ocndT_2e1_N',...
 };
 titles_name = { ...
     %'max ϕ = 30', ...
@@ -23,7 +23,7 @@ fig_height = tile_size * nRows;
 
 % ==== PATHS ====
 %basepath = '/Volumes/One Touch/results_UFEMISM/tetralith_results/';
-basepath = '/Users/frre9931/Desktop/tetralith_results/';
+basepath = '/Users/frre9931/Desktop/arrhenius_results/';
 colormaps.devon = '/Users/frre9931/Documents/PhD/ScientificColourMaps8/devon/devon.cpt';
 %plot_titles = {'Velocity (m/yr)', 'Basal melt rate (m/yr)', 'ΔIce thickness (m)'};
 plot_font_size = 8;
@@ -106,10 +106,10 @@ for i = 1:nCols
     %    plot_mesh_data_b_RLIS(mesh, (uabs_diff(:,i)-uabs_diff(:,i-3)).*mask_vel, ax_all(1,i));
     %end
     hold on;
-    plot(GL2(:,1),GL2(:,2),'k','LineWidth',0.7);
+    plot(GL2(:,1),GL2(:,2),'LineWidth',0.7,'Color',palette_jfly(4,:));
     plot(IM2(:,1),IM2(:,2),'k','LineWidth',0.7);
     plot(basins_MEaSUREs(3).X,basins_MEaSUREs(3).Y,'LineWidth',0.7,'Color',palette_jfly(8,:)); % Brunt
-    plot(basins_MEaSUREs(4).X,basins_MEaSUREs(4).Y,'LineWidth',0.7,'Color',palette_jfly(4,:)); %R-LIS
+    plot(basins_MEaSUREs(4).X,basins_MEaSUREs(4).Y,'LineWidth',0.7,'Color',palette_jfly(8,:)); %R-LIS
     plot(rock_outcrops.X,rock_outcrops.Y,'LineWidth',0.7,'color',[0.25, 0.25, 0.25],'linestyle',':');
     plot(GL1(:,1),GL1(:,2),'LineWidth',0.8,'Color',palette_jfly(3,:),'linestyle','-.');
     %cptcmap('/Users/frre9931/Documents/PhD/ScientificColourMaps8/vik/vik.cpt'...
@@ -118,7 +118,7 @@ for i = 1:nCols
     
     cptcmap('/Users/frre9931/Documents/PhD/ScientificColourMaps8/lajolla/lajolla.cpt'...
             ,'flip',true,'ncol',256);
-    clim([0 500]);
+    clim([0 800]);
 
     %cptcmap(colormaps.devon,'flip',false,'ncol',100);
     %clim([log10(1) log10(2000)]);
@@ -152,10 +152,10 @@ for i = 1:nCols
     %    plot_mesh_data_a_RLIS(mesh, (Hi_diff(:,i)-Hi_diff(:,i-3)).*maskHi_ROI, ax_all(2,i));
     %end
     hold on;
-    plot(GL2(:,1),GL2(:,2),'k','LineWidth',0.7);
+    plot(GL2(:,1),GL2(:,2),'LineWidth',0.7,'Color',palette_jfly(4,:));
     plot(IM2(:,1),IM2(:,2),'k','LineWidth',0.7);
     plot(basins_MEaSUREs(3).X,basins_MEaSUREs(3).Y,'LineWidth',0.7,'Color',palette_jfly(8,:)); % Brunt
-    plot(basins_MEaSUREs(4).X,basins_MEaSUREs(4).Y,'LineWidth',0.7,'Color',palette_jfly(4,:)); %R-LIS
+    plot(basins_MEaSUREs(4).X,basins_MEaSUREs(4).Y,'LineWidth',0.7,'Color',palette_jfly(8,:)); %R-LIS
     plot(rock_outcrops.X,rock_outcrops.Y,'LineWidth',0.7,'color',[0.25, 0.25, 0.25],'linestyle',':');
     plot(GL1(:,1),GL1(:,2),'LineWidth',0.8,'Color',palette_jfly(3,:),'linestyle','-.');
     %cptcmap('GMT_polar','flip',true,'ncol',100);

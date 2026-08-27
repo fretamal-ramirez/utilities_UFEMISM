@@ -23,7 +23,7 @@ fig_height = tile_size * nRows;
 
 % ==== PATHS ====
 %basepath = '/Volumes/One Touch/results_UFEMISM/tetralith_results/';
-basepath = '/Users/frre9931/Desktop/tetralith_results/';
+basepath = '/Users/frre9931/Desktop/arrhenius_results/';
 colormaps.devon = '/Users/frre9931/Documents/PhD/ScientificColourMaps8/devon/devon.cpt';
 %plot_titles = {'Velocity (m/yr)', 'Basal melt rate (m/yr)', 'ΔIce thickness (m)'};
 plot_titles = {'Northings (m)', 'Northings (m)'};
@@ -106,7 +106,7 @@ for i = 1:nCols
     %    plot_mesh_data_b_RLIS(mesh, (uabs_diff(:,i)-uabs_diff(:,i-3)).*mask_vel, ax_all(1,i));
     %end
     hold on;
-    plot(GL2(:,1),GL2(:,2),'k','LineWidth',0.7);
+    %plot(GL2(:,1),GL2(:,2),'k','LineWidth',0.7);
     plot(IM2(:,1),IM2(:,2),'k','LineWidth',0.7);
     plot(basins_MEaSUREs(3).X,basins_MEaSUREs(3).Y,'LineWidth',0.7,'Color',palette_jfly(8,:)); % Brunt
     plot(basins_MEaSUREs(4).X,basins_MEaSUREs(4).Y,'LineWidth',0.7,'Color',palette_jfly(4,:)); %R-LIS
@@ -152,7 +152,7 @@ for i = 1:nCols
     %    plot_mesh_data_a_RLIS(mesh, (Hi_diff(:,i)-Hi_diff(:,i-3)).*maskHi_ROI, ax_all(2,i));
     %end
     hold on;
-    plot(GL2(:,1),GL2(:,2),'k','LineWidth',0.7);
+    %plot(GL2(:,1),GL2(:,2),'k','LineWidth',0.7);
     plot(IM2(:,1),IM2(:,2),'k','LineWidth',0.7);
     plot(basins_MEaSUREs(3).X,basins_MEaSUREs(3).Y,'LineWidth',0.7,'Color',palette_jfly(8,:)); % Brunt
     plot(basins_MEaSUREs(4).X,basins_MEaSUREs(4).Y,'LineWidth',0.7,'Color',palette_jfly(4,:)); %R-LIS
