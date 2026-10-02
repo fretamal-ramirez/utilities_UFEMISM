@@ -64,7 +64,7 @@ initialisation = 'STDdH';
 % Model resolutions of ROI grounding line
 % -------------------------------------------------------------
 
-resolutions = [20 10]; %10 5 2];
+resolutions = [20 10 5 2];
 
 
 % -------------------------------------------------------------
@@ -434,8 +434,8 @@ for i = 1:length(resolutions)
         'end_time_of_run_config = 10000.0');
 
         config = regexprep(config, ...
-        'protect_grounded_mask_t_end_config\s*=\s*[^\r\n]*', ...
-        'protect_grounded_mask_t_end_config = 5000.0');
+        'do_protect_grounded_mask_config\s*=\s*[^\r\n]*', ...
+        'do_protect_grounded_mask_config = .FALSE.');
 
         config = regexprep(config, ...
         'choice_bed_roughness_config\s*=\s*''[^'']*''', ...
