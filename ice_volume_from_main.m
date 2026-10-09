@@ -1,4 +1,5 @@
-% code to plot plot_ice_volumes
+% ice volumes from main_output_UFE. only grounded for now
+
 clear all; close all; clc;
 
 path_to_files = '/Users/frre9931/Desktop/arrhenius_results/';
@@ -22,37 +23,29 @@ plot_names={...
     'BCAP MS1 40kyr',...
 };
 
+% Ocean area
+A_ocean = 3.618e14; % m^2, global ocean area
+area_pixel = 5000*5000; % 5 km res
+
 figure()
-tiledlayout(2,1)
-nexttile
-for i= 1:length(folders)
-    file_to_read = fullfile(path_to_files,folders{i},'/scalar_output_ANT_00001.nc');
-    ice_vol = ncread(file_to_read,'ice_volume');
-    time = ncread(file_to_read,'time');
 
-    plot(time/1000,ice_vol,'LineWidth',2)
-    hold on
+for i= 1:length(folders)
+file_to_read = fullfile(path_to_files,folders{i},'/main_output_ANT_grid_ROI_RiiserLarsen.nc');
+time = ncread(file_to_read,'time');
+Hi = ncread(file_to_read,'Hi');
+
+ice_vol = zeros(size(time));
+for k = 1:size(Hi,3) % iterate over time
+    Hi_pixel = Hi(:,:,k)*area_pixel;
+    ice_vol(k) = sum(sum(Hi_pixel));
+end
+ice_vol_sle = 910/1028 * ice_vol/A_ocean;
+
+plot(time/1000,ice_vol_sle,'LineWidth',2)
+hold on
 end
 legend(plot_names);
 grid on
-title('Ice volume')
 ylabel('Ice volume (m)')
-%hold off
-
-nexttile
-ax = gca;
-ax.XAxis.Exponent = 0; % Disables scientific notation on the X-axis
-for i= 1:length(folders)
-    file_to_read = fullfile(path_to_files,folders{i},'/scalar_output_ANT_00001.nc');
-    ice_vol_af = ncread(file_to_read,'ice_volume_af');
-    time = ncread(file_to_read,'time');
-
-    plot(time/1000,ice_vol_af,'LineWidth',2)
-    hold on
-end
-legend(plot_names);
-grid on
-title('Ice volume above floatation')
-ylabel('Ice volume af (m)')
 xlabel('Time (kyr)')
-%hold off
+title('Ice volume calculated from gridded output for ROI km resolution')
