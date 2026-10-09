@@ -83,7 +83,7 @@ for i=1:length(outputs)
     ice_volume_af=ncread(filepath,'ice_volume_af');
     time = ncread(filepath,"time");
     
-    if i > length(plots_with_same_style)
+    if i > plots_with_same_style
         path_ctrl = fullfile(basepath,folder_ctrl{2},'/scalar_output_ANT_00001.nc');
         ice_volume_af_ctrl=ncread(path_ctrl,'ice_volume_af');
         time_ctrl = ncread(path_ctrl,'time');

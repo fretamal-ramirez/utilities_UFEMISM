@@ -6,29 +6,31 @@
 % for
 
 % ==== DEFINE OUTPUTS ====
-outputs = { ...   
+outputs = { ...
+    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_ctrl2500_ocndT_1e-1_N',...
+    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_ctrl2500_ocndT_2e-1_N',...
+    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_ctrl2500_ocndT_5e-1_N',...
+    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_ctrl2500_ocndT_1e1_N',...
+    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_gradualRT_25km_N',...
+    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_gradualRT_50km_N',...
     'results_ant_PD_maxphi_30_SHR_ctrl2500_ocndT_1e-1_N',...
     'results_ant_PD_maxphi_30_SHR_ctrl2500_ocndT_2e-1_N',...
     'results_ant_PD_maxphi_30_SHR_ctrl2500_ocndT_5e-1_N',...
     'results_ant_PD_maxphi_30_SHR_ctrl2500_ocndT_1e1_N',...
-    'results_ant_PD_maxphi_30_SHR_ctrl2500_ocndT_2e1_N',...
     'results_ant_PD_maxphi_30_SHR_gradualRT_25km_N',...
     'results_ant_PD_maxphi_30_SHR_gradualRT_50km_N',...
-    'results_ant_PD_maxphi_30_SHR_retreat_N',...
 };
 legend_name = { ...
     'OC 0.1',...
     'OC 0.2',...
     'OC 0.5',...
     'OC 1.0',...
-    'OC 2.0',...
     'RT25',...
     'RT50',...
-    'NS',...
 };
 % add simulation for PD ctrl
 folder_ctrl={ ...
-    'results_ant_PD_maxphi_30_SHR_ctrl2500_N',...
+    'results_ant_PD_maxphi_Hb-2000to-250m_SHR_ctrl2500_N',...
     'results_ant_PD_maxphi_30_SHR_ctrl2500_N',...
     };
 basepath = '/Users/frre9931/Desktop/arrhenius_results/';
@@ -46,7 +48,7 @@ fig_height = 10.0; % 254 mm maximum height JOG
 
 % limits for plot
 xmin=2000; xmax=2500;
-ymin=-5; ymax=25; % 350 it was before
+ymin=-1; ymax=35; % 350 it was before
 
 %
 plotcase = 'ctrl'; % could be ctrl or init
@@ -92,7 +94,7 @@ palette_jfly = [
     204 121 167;
 ] / 255;
 
-plots_with_same_style=8;
+plots_with_same_style=6;
 
 % Use tiledlayout with minimal padding and spacing
 tl = tiledlayout('flow'); % 'flow' creates a single tile for one plot
@@ -106,7 +108,7 @@ for i=1:length(outputs)
     ice_volume_af=ncread(filepath,'ice_volume_af');
     time = ncread(filepath,"time");
     
-    if i > length(plots_with_same_style)
+    if i > plots_with_same_style
         path_ctrl = fullfile(basepath,folder_ctrl{2},'/scalar_output_ANT_00001.nc');
         ice_volume_af_ctrl=ncread(path_ctrl,'ice_volume_af');
         time_ctrl = ncread(path_ctrl,'time');
@@ -127,6 +129,11 @@ for i=1:length(outputs)
 
     % SLC respect to ctrl sim
     SLC_respect_ctrl = ice_volume_af_interp(1) - ice_volume_af_interp - (ice_volume_af_ctrl(1)-ice_volume_af_ctrl);
+
+    % print out values
+    fprintf('Contribution of %s\n',string(outputs(i)));
+    fprintf('= %0.1f mm \n',SLC_respect_ctrl(end)*1000)
+    
     switch plotcase
     case('init')
     % plot time series, *1000 to show it in mm instead of meters
@@ -169,19 +176,19 @@ lgd_exp.AutoUpdate = 'off';
 % uncomment this to make the extra legend
 % ======================================
 % 
-% ax = gca;
-% pos = ax.Position;
-% 
-% ax2 = axes('Position',[pos(1)+0.29 pos(2)+0.73 0.07 0.05]);
-% plot([0 1],[0.7 0.7],'k-','LineWidth',2); hold on
-% plot([0 1],[0.3 0.3],'k--','LineWidth',2)
-% 
-% %text(1.1,0.7,'Hb capped','FontSize',10)
-% %text(1.1,0.3,'standard','FontSize',10)
-% text(1.1,0.7,'OC','FontSize',10)
-% text(1.1,0.3,'OC + RT25','FontSize',10)
-% 
-% axis off
+ax = gca;
+pos = ax.Position;
+
+ax2 = axes('Position',[pos(1)+0.29 pos(2)+0.73 0.07 0.05]);
+plot([0 1],[0.7 0.7],'k-','LineWidth',2); hold on
+plot([0 1],[0.3 0.3],'k--','LineWidth',2)
+
+text(1.1,0.7,'b-capped','FontSize',10)
+text(1.1,0.3,'standard','FontSize',10)
+%text(1.1,0.7,'OC','FontSize',10)
+%text(1.1,0.3,'OC + RT25','FontSize',10)
+
+axis off
 
 %==========================================
 print(H.fig,'/Users/frre9931/Documents/PhD/ANT_UFEMISM/plots_ant/Riiser-Larsen/multipanel/scalarSLE_standalone_forcings_maxphi30_CTRL.pdf','-dpdf','-vector');
